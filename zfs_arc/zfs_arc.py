@@ -36,5 +36,5 @@ class ZFSArcCollector(diamond.collector.Collector):
         for stat, val in ko.__getitem__(['zfs', 0, 'arcstats']).items():
             if not self.config['stats'] or (self.config['stats'] and
                     stat in self.config['stats']):
-                If isinstance(val, long):
+                if isinstance(val, long):
                     self.publish(stat, val)
