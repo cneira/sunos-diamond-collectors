@@ -1,8 +1,14 @@
 import subprocess
 import kstat
+import re
 from os import path
 
 def run_cmd(cmd_str):
+    """
+    Run a command and return the output. Multiline output is sent
+    back as an array, single line as a string
+    """
+
     cmd_chunks = cmd_str.split()
 
     if not path.exists(cmd_chunks[0]):
@@ -14,7 +20,12 @@ def run_cmd(cmd_str):
     (out, err) = proc.communicate()
 
     if out:
-        return out
+        out = out.strip().split('\n')
+
+        if len(out) > 1:
+            return out
+        else:
+            return out[0]
     else:
         raise Exception('error: %s' %err)
 
