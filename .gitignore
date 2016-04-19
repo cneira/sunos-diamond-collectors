@@ -1,3 +1,4 @@
 kstat
 *.pyc
 .*.swp
+raw_kstats
