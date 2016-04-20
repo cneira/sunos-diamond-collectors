@@ -1,7 +1,14 @@
+"""
+A library of functions to support my SunOS collectors
+"""
+
 import subprocess
 import kstat
 import re
 from os import path
+
+#-------------------------------------------------------------------------
+# Command execution stuff
 
 def run_cmd(cmd_str):
     """
@@ -28,6 +35,42 @@ def run_cmd(cmd_str):
             return out[0]
     else:
         raise Exception('error: %s' %err)
+
+#-------------------------------------------------------------------------
+# Conversion stuff
+
+def to_bytes(size):
+    sizes = ['b', 'k', 'M', 'G', 'T', 'P', 'E', 'Z']
+    chunks = re.match("^([\d\.]+)(\w)$", size)
+
+    exponent = sizes.index(chunks.group(2))
+    return float(chunks.group(1)) * 1024 ** exponent
+
+#-------------------------------------------------------------------------
+# kstat stuff
+
+def kstat_module(module, name_ptn):
+    """
+    Return a dict of everything matching "name_ptn" in the "module".
+    This was written for the disk_error collector, but will
+    hopefully be useful elsewhere.
+
+    The kstat name is lowercased and whitespace replaced with an
+    underscore.
+    """
+
+    ko = kstat.Kstat(module)
+    items = {}
+
+    for x in ko._iterksp():
+        kmodule, kinstance, kname, kclass, ktype, ksp = x
+        astat =  ko[kmodule, kinstance, kname]
+        for k, v in astat.items():
+            if re.match(name_ptn, k):
+                items['%s.%s' % (kname, k.lower().replace(' ', '_'))] = v
+
+    return items
+
 
 def kstat_val(kname):
     """
