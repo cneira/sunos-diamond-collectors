@@ -16,7 +16,8 @@ By default sends the allocated data in the pool (b), free space (b)
 capacity (%) and the pool's health. Override with the 'fields'
 setting in your config.
 
-Only tested on Solaris.
+Only tested on Solaris. May work with bedroom hobbyist operating
+systems.
 
 #### Dependencies
 
@@ -30,9 +31,7 @@ Only tested on Solaris.
 """
 
 import diamond.collector
-import re
-import subprocess
-from os import path
+import sunos_helpers
 
 class ZpoolCollector(diamond.collector.Collector):
 
@@ -46,13 +45,6 @@ class ZpoolCollector(diamond.collector.Collector):
 
     def process_config(self):
         super(ZpoolCollector, self).process_config()
-
-    def to_bytes(self, size):
-        sizes = ['b', 'k', 'M', 'G', 'T', 'P', 'E', 'Z']
-        chunks = re.match("^([\d\.]+)(\w)$", size)
-
-        r = sizes.index(chunks.group(2))
-        return float(chunks.group(1)) * 1024 ** r
 
     def health_as_int(self, health):
         #
@@ -75,31 +67,26 @@ class ZpoolCollector(diamond.collector.Collector):
         return int_health
 
     def collect(self):
-        if not path.exists('/usr/sbin/zpool'):
-            raise NotImplementedError("platform not supported")
+        out = sunos_helpers.run_cmd('/usr/sbin/zpool list -H')
 
-        proc = subprocess.Popen(['/usr/sbin/zpool',
-                                 'list',
-                                 '-H'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        (out, err) = proc.communicate()
-
-        for p in filter(None, out.split("\n")):
+        for p in out:
             (name, size, alloc, free, cap, dedup, health,
                     altroot) = p.split();
 
             if 'size' in self.config['fields']:
-                self.publish('%s.size' % name, self.to_bytes(alloc))
+                self.publish('%s.size' % name,
+                        sunos_helpers.to_bytes(alloc))
 
             if 'alloc' in self.config['fields']:
-                self.publish('%s.alloc' % name, self.to_bytes(alloc))
+                self.publish('%s.alloc' % name,
+                        sunos_helpers.to_bytes(alloc))
 
             if 'free' in self.config['fields']:
-                self.publish('%s.free' % name, self.to_bytes(free))
+                self.publish('%s.free' % name,
+                        sunos_helpers.to_bytes(free))
 
             if 'cap' in self.config['fields']:
-                self.publish('%s.cap' % name, int(cap[:-1]))
+                self.publish('%s.cap' % name, float(cap[:-1]))
 
             if 'dedup' in self.config['fields']:
                 self.publish('%s.dedup' % name, float(dedup[:-1]))
