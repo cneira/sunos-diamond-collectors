@@ -10,10 +10,11 @@ from os import path
 #-------------------------------------------------------------------------
 # Command execution stuff
 
-def run_cmd(cmd_str):
+def run_cmd(cmd_str, pfexec=False):
     """
     Run a command and return the output. Multiline output is sent
-    back as an array, single line as a string
+    back as an array, single line as a string. Lets you elevate
+    privs with pfexec if you wish it.
     """
 
     cmd_chunks = cmd_str.split()
@@ -21,12 +22,18 @@ def run_cmd(cmd_str):
     if not path.exists(cmd_chunks[0]):
         raise NotImplementedError("'%s' not found" % cmd_chunks[0])
 
+    if pfexec:
+        if not path.exists('/bin/pfexec'):
+            raise NotImplementedError('pfexec not found')
+
+        cmd_chunks.insert(0, '/bin/pfexec')
+
     proc = subprocess.Popen(cmd_chunks,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     (out, err) = proc.communicate()
 
-    if out:
+    if proc.returncode == 0:
         out = out.strip().split('\n')
 
         if len(out) > 1:
@@ -40,11 +47,15 @@ def run_cmd(cmd_str):
 # Conversion stuff
 
 def to_bytes(size):
-    sizes = ['b', 'k', 'M', 'G', 'T', 'P', 'E', 'Z']
-    chunks = re.match("^([\d\.]+)(\w)$", size)
 
-    exponent = sizes.index(chunks.group(2))
-    return float(chunks.group(1)) * 1024 ** exponent
+    sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
+
+    try:
+        chunks = re.match("^([\d\.]+)(\w)$", size)
+        exponent = sizes.index(chunks.group(2))
+        return float(chunks.group(1)) * 1024 ** exponent
+    except:
+        return size
 
 #-------------------------------------------------------------------------
 # kstat stuff
