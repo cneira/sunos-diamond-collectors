@@ -24,8 +24,7 @@ offline, or in maintenance state.
 """
 
 import diamond.collector
-import subprocess
-from os import path
+import sunos_helpers
 
 class SmfSvcCollector(diamond.collector.Collector):
 
@@ -40,14 +39,7 @@ class SmfSvcCollector(diamond.collector.Collector):
         return config
 
     def collect(self):
-        if not path.exists('/bin/svcs'):
-            raise NotImplementedError("platform not supported")
-
-        proc = subprocess.Popen(['/bin/svcs', '-aHo', 'state'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        (out, err) = proc.communicate()
-        result = out.split('\n')
+        svcs = sunos_helpers.run_cmd('/bin/svcs -aHo state')
 
         for state in self.config['states']:
-            self.publish(state, result.count(state))
+            self.publish(state, svcs.count(state))
