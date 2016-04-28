@@ -7,14 +7,13 @@ renaming that the collectd equivalent does, which I think makes it
 more future-proof.
 
 By default all ARC stats are dumped. If you wish to be more
-selective, you can supply a comma-separated list of kstat names of
-the kstats you want.
+selective, you can supply a comma-separated list of the kstat names
+you want.
 
 #### Dependencies
 
   * kstat module from https://github.com/imp/kstat
   * SunOS
-
 
 """
 
