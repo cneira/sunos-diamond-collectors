@@ -6,17 +6,15 @@ class SunOSNFSServerCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(SunOSNFSServerCollector, self).get_default_config()
         config.update({
-            'vers':  [2, 3, 4],
-            'path':   'nfs.server',
+            'nfs_vers': [3,4],
+            'path':     'nfs.server',
             })
         return config
 
     def collect(self):
-
-        for v in self.config['vers']:
-            self.log.debug('getting server stats for version %d', v)
-        #kstats = sunos_helpers.kstat_module('cmdkerror', '.* Errors')
-
-        #for name, val in kstats.items():
-            #self.publish(name.replace(',error', ''), val)
-
+        for nfs_ver in self.config['nfs_vers']:
+            for k, v in sunos_helpers.kstat_name(
+                    'nfs::0::rfsproccnt_v%s' % nfs_ver).iteritems():
+                if (not 'fields' in self.config) or (k in
+                self.config['fields']):
+                  self.publish('v%s.%s' % (nfs_ver, k), v)
