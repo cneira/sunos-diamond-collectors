@@ -60,6 +60,15 @@ def to_bytes(size):
 #-------------------------------------------------------------------------
 # kstat stuff
 
+def kstat_name(kname):
+    # fetch kstats for multiple named stat groups within a module,
+    # removing the crtime and snaptime.  For the NFS stuff.
+    ko = kstat.Kstat(kname)
+    el = kname.split('::')
+    raw = ko[el[0], int(el[1]), el[2]]
+    return {k: v for k, v in raw.iteritems() if k != 'crtime' and k
+            !=  'snaptime' and k != 'class'}
+
 def kstat_module(module, name_ptn):
     """
     Return a dict of everything matching "name_ptn" in the "module".
