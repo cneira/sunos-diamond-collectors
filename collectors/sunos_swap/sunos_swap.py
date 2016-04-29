@@ -15,9 +15,8 @@ Output is in bytes.
 """
 
 import diamond.collector
-import subprocess
 import re
-from os import path
+import sunos_helpers
 
 class SunOSSwapCollector(diamond.collector.Collector):
 
@@ -29,17 +28,11 @@ class SunOSSwapCollector(diamond.collector.Collector):
         return config
 
     def collect(self):
-        if not path.exists('/usr/sbin/swap'):
-            raise NotImplementedError("platform not supported")
-
-        proc = subprocess.Popen(['/usr/sbin/swap', '-s'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        (out, err) = proc.communicate()
+        swap = sunos_helpers.run_cmd('/usr/sbin/swap -s')
 
         info = re.match(
                 'total: (\d+)k [\w ]* \+ (\d+)k.*= (\d+)k used, (\d+)k.*$',
-                out)
+                swap)
 
         for i, metric in enumerate(['allocated', 'reserved', 'used',
             'available']):
