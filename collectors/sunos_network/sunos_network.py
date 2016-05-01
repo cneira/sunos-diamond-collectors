@@ -53,7 +53,7 @@ class SunOSNetworkCollector(diamond.collector.Collector):
         for nic in self.config['nic']:
             for zid, zname in zm.items():
                 for k, v in sunos_helpers.kstat_name(
-                        'link::%s::%s' % (zid, nic)).iteritems():
+                        'link:%s:%s' % (zid, nic)).iteritems():
                     if (not 'fields' in self.config) or (k in
                     self.config['fields']):
                       self.publish('%s.%s.%s' % (zname, nic, k), v)
