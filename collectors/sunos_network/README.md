@@ -87,3 +87,7 @@ network.<zone>.<interface>.rbytes64
 
 I don't currently have access to a multi-homed box, so using NICs
 other than `net0` is untested and possibly unsupported.
+
+I'd like to have this work for etherstubs and vswitches. We'll see
+how that goes once I get my hands on some hardware which supports
+them.
