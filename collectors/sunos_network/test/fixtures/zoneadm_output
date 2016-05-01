@@ -1,0 +1,10 @@
+0:global:running:/::solaris:shared:-:none:
+5:shark-wavefront:running:/zones/shark-wavefront:dcb390e5-04d8-43d0-a3dc-ba9c49c25564:solaris:excl:-:none:
+6:shark-graylog:running:/system/zones/shark-graylog:ecec0a08-23a7-4e6e-9541-97489f52933f:solaris:excl:-:none:
+7:shark-dns:running:/zones/shark-dns:82704aa4-99dc-46be-afbd-c011ea1a313e:solaris:excl:-:none:
+8:shark-ws:running:/zones/shark-ws:56d0a29f-494f-4e82-823c-cb691cea783a:solaris:excl:-:none:
+12:shark-media:running:/zones/shark-media:3d148465-fc27-4f67-935a-9f35b5277801:solaris:excl:-:none:
+13:shark-mysql:running:/zones/shark-mysql:8d2b396a-b42e-4cde-9edd-dd6837d48668:solaris:excl:-:none:
+14:shark-www:running:/zones/shark-www:55550001-1cc0-458c-8de6-d73328201ff2:solaris:excl:-:none:
+15:shark-login:running:/zones/shark-login:cd5955f7-304b-4bf4-a76e-f266932f23d1:solaris:excl:R:fixed-configuration:
+-:shark-gold:installed:/zones/shark-gold:25dc5593-dc21-4a42-903b-8ec752caee0d:solaris:excl:-::
