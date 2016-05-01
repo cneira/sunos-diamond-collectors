@@ -2,10 +2,17 @@
 A library of functions to support my SunOS collectors
 """
 
-import subprocess
-import kstat
-import re
+import subprocess, re, sys
 from os import path
+
+# We need kstat, which should be at the same level as ourselves.
+# Diamond will find it just fine, but tweaking the path here makes
+# tests and other consumers easier.
+
+kstat_dir = '/'.join(path.realpath(__file__).split('/')[0:-2])
+sys.path.append(kstat_dir + '/kstat')
+
+import kstat
 
 #-------------------------------------------------------------------------
 # Command execution stuff
@@ -46,14 +53,15 @@ def run_cmd(cmd_str, pfexec=False):
 #-------------------------------------------------------------------------
 # Conversion stuff
 
-def to_bytes(size):
-
+def to_bytes(size, use_thousands = False):
     sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
+
+    multiplier = 1000 if use_thousands else 1024
 
     try:
         chunks = re.match("^([\d\.]+)(\w)$", size)
         exponent = sizes.index(chunks.group(2))
-        return float(chunks.group(1)) * 1024 ** exponent
+        return float(chunks.group(1)) * multiplier ** exponent
     except:
         return size
 
@@ -61,23 +69,47 @@ def to_bytes(size):
 # kstat stuff
 
 def kstat_name(kname):
-    # fetch kstats for multiple named stat groups within a module,
-    # removing the crtime and snaptime.  For the NFS stuff.
+    """
+    fetch kstats for multiple named stat groups within a module,
+    removing the crtime and snaptime.  For the NFS stuff.
+    """
+
+    assert isinstance(kname, basestring)
+
     ko = kstat.Kstat(kname)
-    el = kname.split('::')
-    raw = ko[el[0], int(el[1]), el[2]]
-    return {k: v for k, v in raw.iteritems() if k != 'crtime' and k
-            !=  'snaptime' and k != 'class'}
+    el = kname.split(':')
+
+    if len(el) != 3:
+        raise ValueError('kname is not three parts')
+
+    try:
+        instance = int(el[1])
+    except:
+        raise ValueError('instance is not an integer')
+
+    try:
+        raw = ko[el[0], instance, el[2]]
+    except KeyError:
+        return {}
+
+    return {k: v for k, v in raw.iteritems()
+            if k != 'crtime' and k != 'snaptime' and k != 'class'}
 
 def kstat_module(module, name_ptn):
     """
-    Return a dict of everything matching "name_ptn" in the "module".
-    This was written for the disk_error collector, but will
-    hopefully be useful elsewhere.
+    Return a dict of everything matching "name_ptn" in all names and
+    classes underneath "module".
+
+    This was written for the disk_error collector, where it fetches,
+    for instance the 'Hard Error' value from every `cmdkerror` name
+    space.
 
     The kstat name is lowercased and whitespace replaced with an
     underscore.
     """
+
+    assert isinstance(module, basestring)
+    assert isinstance(name_ptn, basestring)
 
     ko = kstat.Kstat(module)
     items = {}
@@ -85,6 +117,7 @@ def kstat_module(module, name_ptn):
     for x in ko._iterksp():
         kmodule, kinstance, kname, kclass, ktype, ksp = x
         astat =  ko[kmodule, kinstance, kname]
+
         for k, v in astat.items():
             if re.match(name_ptn, k):
                 items['%s.%s' % (kname, k.lower().replace(' ', '_'))] = v
@@ -94,11 +127,25 @@ def kstat_module(module, name_ptn):
 
 def kstat_val(kname):
     """
-    Returns a single kstat value. I'll probably need something much more
-    generic soon, but for now this does the job.
+    Returns a single kstat value. I'll probably need something much
+    more generic soon, but for now this does the job.
     """
 
-    kc = kname.split(':')
+    assert isinstance(kname, basestring)
+
+    el = kname.split(':')
+
+    if len(el) != 4:
+        raise ValueError('kstat name is not four parts')
+
+    try:
+        instance = int(el[1])
+    except:
+        raise ValueError('instance is not an integer')
+
     ko = kstat.Kstat()
-    return ko.__getitem__([kc[0], int(kc[1]), kc[2]])[kc[3]]
+    try:
+        return ko.__getitem__([el[0], instance, el[2]])[el[3]]
+    except:
+        return False
 
