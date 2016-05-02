@@ -31,7 +31,14 @@ systems.
 """
 
 import diamond.collector
-import sunos_helpers
+
+# I don't know why, but I have to do the former to make the tests
+# work and the latter to make the collector work.
+
+try:
+    from sunos_helpers import sunos_helpers as sh
+except:
+    import sunos_helpers as sh
 
 class ZpoolCollector(diamond.collector.Collector):
 
@@ -42,9 +49,6 @@ class ZpoolCollector(diamond.collector.Collector):
             'fields': ['alloc', 'free', 'cap', 'health']
             })
         return config
-
-    def process_config(self):
-        super(ZpoolCollector, self).process_config()
 
     def health_as_int(self, health):
         #
@@ -60,30 +64,26 @@ class ZpoolCollector(diamond.collector.Collector):
         healths = ['ONLINE', 'DEGRADED', 'SUSPENDED', 'UNAVAIL']
 
         try:
-            int_health = healths.index(health)
+            return healths.index(health)
         except ValueError:
-            int_health = 4
+            return 4
 
-        return int_health
+    def zpool(self):
+        return sh.run_cmd('/usr/sbin/zpool list -H')
 
     def collect(self):
-        out = sunos_helpers.run_cmd('/usr/sbin/zpool list -H')
-
-        for p in out:
+        for p in self.zpool():
             (name, size, alloc, free, cap, dedup, health,
                     altroot) = p.split();
 
             if 'size' in self.config['fields']:
-                self.publish('%s.size' % name,
-                        sunos_helpers.to_bytes(alloc))
+                self.publish('%s.size' % name, sh.to_bytes(alloc))
 
             if 'alloc' in self.config['fields']:
-                self.publish('%s.alloc' % name,
-                        sunos_helpers.to_bytes(alloc))
+                self.publish('%s.alloc' % name, sh.to_bytes(alloc))
 
             if 'free' in self.config['fields']:
-                self.publish('%s.free' % name,
-                        sunos_helpers.to_bytes(free))
+                self.publish('%s.free' % name, sh.to_bytes(free))
 
             if 'cap' in self.config['fields']:
                 self.publish('%s.cap' % name, float(cap[:-1]))
@@ -92,5 +92,4 @@ class ZpoolCollector(diamond.collector.Collector):
                 self.publish('%s.dedup' % name, float(dedup[:-1]))
 
             if 'health' in self.config['fields']:
-                self.publish('%s.health' % name,
-                        self.health_as_int(health))
+                self.publish('%s.health' % name, self.health_as_int(health))
