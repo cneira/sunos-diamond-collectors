@@ -24,9 +24,11 @@ class ZonesCollector(diamond.collector.Collector):
             })
         return config
 
+    def zoneadm(self):
+        return sunos_helpers.run_cmd('/usr/sbin/zoneadm list -pc')
+
     def collect(self):
-        zones = sunos_helpers.run_cmd('/usr/sbin/zoneadm list -pc')
-        zones = [z.split(':')[2] for z in zones]
+        zones = [z.split(':')[2] for z in self.zoneadm()]
 
         for state in self.config['states']:
             self.publish('count.' + state, zones.count(state))
