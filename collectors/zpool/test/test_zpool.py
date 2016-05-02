@@ -7,7 +7,6 @@ from mock import Mock
 from mock import patch
 from diamond.collector import Collector
 from zpool import ZpoolCollector
-from sunos_helpers import sunos_helpers as sh
 
 class TestZpoolCollector(CollectorTestCase):
     def setUp(self, config=None):
