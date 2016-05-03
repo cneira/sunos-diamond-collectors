@@ -56,7 +56,9 @@ fma.fmstat.<module>.memsz
 fma.fmstat.<module>.bufsz
 ```
 
-Where `<module>` is `sas-cabling`, `sensor-transport` etc.
+Where `<module>` is `sas-cabling`, `sensor-transport` etc. This
+module generates a lot of metrics, and I am not sure of their value.
+So, the sub-collector is disabled by default.
 
 ## Options
 
