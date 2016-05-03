@@ -31,10 +31,6 @@ systems.
 """
 
 import diamond.collector
-
-# I don't know why, but I have to do the former to make the tests
-# work and the latter to make the collector work.
-
 import sunos_helpers as sh
 
 class ZpoolCollector(diamond.collector.Collector):
