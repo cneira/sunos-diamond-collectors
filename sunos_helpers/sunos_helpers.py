@@ -2,16 +2,8 @@
 A library of functions to support my SunOS collectors
 """
 
-import subprocess, re, sys
+import subprocess, re
 from os import path
-
-# We need kstat, which should be at the same level as ourselves.
-# Diamond will find it just fine, but tweaking the path here makes
-# tests and other consumers easier.
-
-kstat_dir = '/'.join(path.realpath(__file__).split('/')[0:-2])
-sys.path.append(kstat_dir + '/kstat')
-
 import kstat
 
 #-------------------------------------------------------------------------
@@ -53,7 +45,7 @@ def run_cmd(cmd_str, pfexec=False):
 #-------------------------------------------------------------------------
 # Conversion stuff
 
-def to_bytes(size, use_thousands = False):
+def bytify(size, use_thousands = False):
     sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
 
     multiplier = 1000 if use_thousands else 1024
@@ -144,6 +136,7 @@ def kstat_val(kname):
         raise ValueError('instance is not an integer')
 
     ko = kstat.Kstat()
+
     try:
         return ko.__getitem__([el[0], instance, el[2]])[el[3]]
     except:

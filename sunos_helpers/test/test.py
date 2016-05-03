@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import platform, sys, os, unittest
 
 if platform.system() != 'SunOS':
@@ -7,7 +9,7 @@ if platform.system() != 'SunOS':
 class_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-2])
 sys.path.append(class_dir)
 
-import sunos_helpers as sh
+import sunos_helpers.sunos_helpers as sh
 
 class TestSunOSHelpers(unittest.TestCase):
 
@@ -34,16 +36,16 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertNotRegexpMatches(sh.run_cmd('/usr/bin/id'), 'root')
         self.assertRegexpMatches(sh.run_cmd('/usr/bin/id', True), 'root')
 
-    def test_to_bytes(self):
-        self.assertEqual(sh.to_bytes('2K'), 2048)
-        self.assertEqual(sh.to_bytes('2K', True), 2000)
-        self.assertEqual(sh.to_bytes('2.5K'), 2560)
-        self.assertEqual(sh.to_bytes('800M'), 838860800)
-        self.assertEqual(sh.to_bytes('800M', True), 800000000)
-        self.assertEqual(sh.to_bytes('6.12G'), 6571299962.88)
-        self.assertEqual(sh.to_bytes('6.12G', True), 6120000000)
-        self.assertEqual(sh.to_bytes('0.5T'), 549755813888)
-        self.assertEqual(sh.to_bytes('0.5T', True), 500000000000)
+    def test_bytify(self):
+        self.assertEqual(sh.bytify('2K'), 2048)
+        self.assertEqual(sh.bytify('2K', True), 2000)
+        self.assertEqual(sh.bytify('2.5K'), 2560)
+        self.assertEqual(sh.bytify('800M'), 838860800)
+        self.assertEqual(sh.bytify('800M', True), 800000000)
+        self.assertEqual(sh.bytify('6.12G'), 6571299962.88)
+        self.assertEqual(sh.bytify('6.12G', True), 6120000000)
+        self.assertEqual(sh.bytify('0.5T'), 549755813888)
+        self.assertEqual(sh.bytify('0.5T', True), 500000000000)
 
     def test_kstat_name(self):
         with self.assertRaises(ValueError):

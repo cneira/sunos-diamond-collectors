@@ -79,6 +79,6 @@ class FMACollector(diamond.collector.Collector):
 
                 for k, v in raw:
                     if k == 'memsz' or k == 'bufsz':
-                        v = sunos_helpers.to_bytes(v)
+                        v = sunos_helpers.bytify(v)
 
                     self.publish('fmstat.%s.%s' % (module, k), v)

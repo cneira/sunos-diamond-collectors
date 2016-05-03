@@ -35,10 +35,7 @@ import diamond.collector
 # I don't know why, but I have to do the former to make the tests
 # work and the latter to make the collector work.
 
-try:
-    from sunos_helpers import sunos_helpers as sh
-except:
-    import sunos_helpers as sh
+import sunos_helpers as sh
 
 class ZpoolCollector(diamond.collector.Collector):
 
@@ -77,13 +74,13 @@ class ZpoolCollector(diamond.collector.Collector):
                     altroot) = p.split();
 
             if 'size' in self.config['fields']:
-                self.publish('%s.size' % name, sh.to_bytes(alloc))
+                self.publish('%s.size' % name, sh.bytify(alloc))
 
             if 'alloc' in self.config['fields']:
-                self.publish('%s.alloc' % name, sh.to_bytes(alloc))
+                self.publish('%s.alloc' % name, sh.bytify(alloc))
 
             if 'free' in self.config['fields']:
-                self.publish('%s.free' % name, sh.to_bytes(free))
+                self.publish('%s.free' % name, sh.bytify(free))
 
             if 'cap' in self.config['fields']:
                 self.publish('%s.cap' % name, float(cap[:-1]))
