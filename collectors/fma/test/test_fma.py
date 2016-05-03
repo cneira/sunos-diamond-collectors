@@ -14,6 +14,7 @@ class TestFMACollector(CollectorTestCase):
         if config is None:
             config = get_collector_config('FMACollector', {
                 'interval': '10',
+                'fmstat': True,
             })
         else:
             config = get_collector_config('FMACollector', config)
