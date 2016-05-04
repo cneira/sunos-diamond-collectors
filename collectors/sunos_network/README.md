@@ -17,7 +17,7 @@ software.
   statistics for the global zone only.
 
 * **`nic`**: is a string or list of NICs to watch. Default is
-  `<interface>`.
+  `net0`.
 
 * **`fields`**: is used to supply a filter list of fields
   which you are interested in.  A metric will only be published if
