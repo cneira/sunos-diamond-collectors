@@ -7,43 +7,43 @@ software.
 
 ## Options
 
-* **`zones`** tells the collector which zones to get
+* **`zones`**: tells the collector which zones to get
   statistics for. By default it will only do zone `0`, which is the
   global. Zones are mapped by their ID, which you can see in the
   output of `zoneadm list`. You can use the magic value `__all__` to
   get output for all zones on the box. There's a minor overhead in
   collecting zone information as `zoneadm` has to be run at the
-  start of every collection. String or list. By default the
-  collector will get statistics for the global zone only.
+  start of every collection. By default the collector will get
+  statistics for the global zone only.
 
-* **`nic`**  is a string or list of NICs to watch. Default is
+* **`nic`**: is a string or list of NICs to watch. Default is
   `<interface>`.
 
-* **`fields`**  is used to supply a filter list of fields
+* **`fields`**: is used to supply a filter list of fields
   which you are interested in.  A metric will only be published if
   its name is an element of that array. Lots of things in the `net`
   module don't make much sense in a telemetry context. (Link speed,
   duplex setting etc.)
 
   Default fields are
-  * 'obytes64': bytes successfully received
-  * 'rbytes64': bytes successfully transmitted
-  * 'collisions': collisions during transmit
-  * 'brdcstrcv': broadcast *packets* successfully received
-  * 'brdcstxmt': broadcast *packets* successfully transmitted
-  * 'ierrors': packets received which contained errors
-  * 'oerrors': packets not transmitted because they contained errors
-  * 'multircv': multicast *packets* successfully received
-  * 'multixmit': multicast *packets* successfully transmitted
+  * `obytes64`: bytes successfully received
+  * `rbytes64`: bytes successfully transmitted
+  * `collisions`: collisions during transmit
+  * `brdcstrcv`: broadcast *packets* successfully received
+  * `brdcstxmt`: broadcast *packets* successfully transmitted
+  * `ierrors`: packets received which contained errors
+  * `oerrors`: packets not transmitted because they contained errors
+  * `multircv`: multicast *packets* successfully received
+  * `multixmit`: multicast *packets* successfully transmitted
 
-[The Illumos `gld(7d)` man page] explains pretty much all of the
-fields. The above selection is fairly abitrary, and you may find a
-better fit for your application.
+[The Illumos `gld(7d)` man page](https://illumos.org/man/7D/gld)
+explains pretty much all of the fields. The above selection is
+fairly abitrary, and you may find a better fit for your application.
 
 ## Statistics
 
 On an eight-core i7 box with eight zones, collection of the default
-fields takes ~57ms.
+fields for all zones takes ~57ms.
 
 ### Examples
 
