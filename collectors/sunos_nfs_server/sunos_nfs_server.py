@@ -14,7 +14,7 @@ class SunOSNFSServerCollector(diamond.collector.Collector):
     def collect(self):
         for nfs_ver in self.config['nfs_vers']:
             for k, v in sunos_helpers.kstat_name(
-                    'nfs::0::rfsproccnt_v%s' % nfs_ver).iteritems():
+                    'nfs:0:rfsproccnt_v%s' % nfs_ver).iteritems():
                 if (not 'fields' in self.config) or (k in
                 self.config['fields']):
                   self.publish('v%s.%s' % (nfs_ver, k), v)
