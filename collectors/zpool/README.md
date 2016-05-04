@@ -4,6 +4,11 @@ Uses the `zpool` CLI to report on the state of ZFS pools. Written
 and tested on Solaris, but will likely work on FreeBSD and, if you
 must, Linux.
 
+## Statistics
+
+Collecting information on four pools on an 8-core i7 system takes
+around 15ms.
+
 ## Metric Paths
 
 By default it reports all the columns in the default `zpool` output.

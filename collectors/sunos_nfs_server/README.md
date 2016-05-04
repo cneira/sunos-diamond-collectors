@@ -37,6 +37,10 @@ enabled = True
 nfs_vers = 4
 ```
 
+## Statistics
+
+The `read/write/remove` example above takes under 10ms to collect
+information on an 8-core i7 system.
 
 ## Metric Paths
 
