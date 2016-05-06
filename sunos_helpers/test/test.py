@@ -47,6 +47,22 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.bytify('0.5T'), 549755813888)
         self.assertEqual(sh.bytify('0.5T', True), 500000000000)
 
+    def test_kstat_class(self):
+        res = sh.kstat_class('disk')
+        self.assertIsInstance(res, dict)
+        self.assertGreater(len(res), 0)
+        first = res.keys()[0]
+        self.assertGreater(len(res[first].keys()), 0)
+        self.assertIn('nread', (res[first].keys()))
+        self.assertIn('nwritten', (res[first].keys()))
+
+        # This might not work on other boxes. did, maybe?
+        for k in res.keys():
+            self.assertRegexpMatches(k, '^cmdk\d+$')
+
+        for v in res[first].values():
+            self.assertIsInstance(v, long)
+
     def test_kstat_name(self):
         with self.assertRaises(ValueError):
             sh.kstat_name('nfs:NOT_ALLOWED:nfs4')
