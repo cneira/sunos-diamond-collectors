@@ -43,6 +43,27 @@ def run_cmd(cmd_str, pfexec=False):
         raise Exception('error: %s' %err)
 
 #-------------------------------------------------------------------------
+# Miscellany
+
+def in_or_match(ptn, lst):
+    """
+    Return true if 'ptn' is a member of 'lst' or if  'ptn'
+    matches any element of 'lst'. Respect the magic pattern
+    '__all__'.
+    """
+
+    assert isinstance(ptn, basestring)
+
+    if lst == '__all__': return True
+
+    if ptn in lst: return True
+
+    for el in lst:
+        if re.match(ptn, el): return True
+
+    return False
+
+#-------------------------------------------------------------------------
 # Conversion stuff
 
 def bytify(size, use_thousands = False):

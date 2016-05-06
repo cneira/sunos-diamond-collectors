@@ -8,8 +8,10 @@ if platform.system() != 'SunOS':
 
 class_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-2])
 sys.path.append(class_dir)
+kstat_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-3])
+sys.path.append(os.path.join(kstat_dir, 'kstat'))
 
-import sunos_helpers.sunos_helpers as sh
+import sunos_helpers as sh
 
 class TestSunOSHelpers(unittest.TestCase):
 
@@ -46,6 +48,18 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.bytify('6.12G', True), 6120000000)
         self.assertEqual(sh.bytify('0.5T'), 549755813888)
         self.assertEqual(sh.bytify('0.5T', True), 500000000000)
+
+    def test_in_or_match(self):
+        lst = ['cmdk0', 'cmdk2']
+
+        self.assertFalse(sh.in_or_match('__all__', lst))
+        self.assertTrue(sh.in_or_match('anything', '__all__'))
+        self.assertTrue(sh.in_or_match('word', 'word'))
+        self.assertTrue(sh.in_or_match('cmdk0', lst))
+        self.assertFalse(sh.in_or_match('cmdk1', lst))
+        self.assertTrue(sh.in_or_match('cmdk[0-9]', lst))
+        self.assertTrue(sh.in_or_match('.*2$', lst))
+        self.assertTrue(sh.in_or_match('cmdk\d+', lst))
 
     def test_kstat_class(self):
         res = sh.kstat_class('disk')
