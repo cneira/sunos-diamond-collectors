@@ -45,21 +45,27 @@ def run_cmd(cmd_str, pfexec=False):
 #-------------------------------------------------------------------------
 # Miscellany
 
-def in_or_match(ptn, lst):
+def wanted(have, want):
     """
-    Return true if 'ptn' is a member of 'lst' or if  'ptn'
-    matches any element of 'lst'. Respect the magic pattern
-    '__all__'.
+    A filtering method.
+    have: is the thing we know we have. This usually comes from an
+        iteratable, and is a string.
+    want: could be a list. True if 'want' is a member. Could be a
+        regex, or a list containing a regex: compare. Could be
+        '__all__', in which case we want whatever we 'have'.
     """
 
-    assert isinstance(ptn, basestring)
+    assert isinstance(have, basestring)
 
-    if lst == '__all__': return True
+    if want == '__all__': return True
 
-    if ptn in lst: return True
+    if have in want: return True
 
-    for el in lst:
-        if re.match(ptn, el): return True
+    if isinstance(want, basestring):
+        if re.match(want, have): return True
+    else:
+        for item in want:
+            if re.match(item, have): return True
 
     return False
 

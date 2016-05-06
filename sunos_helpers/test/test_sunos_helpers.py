@@ -49,17 +49,22 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.bytify('0.5T'), 549755813888)
         self.assertEqual(sh.bytify('0.5T', True), 500000000000)
 
-    def test_in_or_match(self):
-        lst = ['cmdk0', 'cmdk2']
+    def test_wanted(self):
+        want = ['cmdk0', 'cmdk2']
+        self.assertFalse(sh.wanted('__all__', want))
+        self.assertTrue(sh.wanted('anything', '__all__'))
+        self.assertTrue(sh.wanted('word', 'word'))
+        self.assertTrue(sh.wanted('cmdk0', want))
+        self.assertFalse(sh.wanted('cmdk1', want))
 
-        self.assertFalse(sh.in_or_match('__all__', lst))
-        self.assertTrue(sh.in_or_match('anything', '__all__'))
-        self.assertTrue(sh.in_or_match('word', 'word'))
-        self.assertTrue(sh.in_or_match('cmdk0', lst))
-        self.assertFalse(sh.in_or_match('cmdk1', lst))
-        self.assertTrue(sh.in_or_match('cmdk[0-9]', lst))
-        self.assertTrue(sh.in_or_match('.*2$', lst))
-        self.assertTrue(sh.in_or_match('cmdk\d+', lst))
+        self.assertTrue(sh.wanted('cmdk0', 'cmdk\d+'))
+        self.assertTrue(sh.wanted('cmdk2', '^.*2$'))
+
+        want = ['cmdk[0-3]', 'did.*']
+        self.assertTrue(sh.wanted('cmdk1', want))
+        self.assertFalse(sh.wanted('cmdk5', want))
+        self.assertFalse(sh.wanted('sda', want))
+        self.assertTrue(sh.wanted('did99', want))
 
     def test_kstat_class(self):
         res = sh.kstat_class('disk')
