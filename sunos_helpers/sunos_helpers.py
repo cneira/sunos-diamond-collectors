@@ -60,6 +60,33 @@ def bytify(size, use_thousands = False):
 #-------------------------------------------------------------------------
 # kstat stuff
 
+"""
+Rather than write a complex, comprehensive general kstat accessor,
+I'm making up what I need as I need it. This will (already is) turn
+into a hotch-potch of similar methods but I'll cope.
+"""
+
+def kstat_class(kclass):
+    """
+    fetch kstats for all instances and names of the given class.
+    Discards anything that's not a 'long'. This might turn out not
+    to be right in every case, but at the moment, it is.
+    """
+
+    assert isinstance(kclass, basestring)
+
+    ko = kstat.Kstat()
+    ret = {}
+
+    for module, instance, name, ks_class, ks_type, ksp in ko._iterksp():
+        if ks_class == kclass:
+            ret[name] = {}
+            astat =  ko[module, instance, name]
+            for k, v in astat.items():
+                if isinstance(v, long): ret[name][k] = v
+
+    return ret
+
 def kstat_name(kname):
     """
     fetch kstats for multiple named stat groups within a module,
