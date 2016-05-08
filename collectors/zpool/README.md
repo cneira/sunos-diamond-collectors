@@ -4,6 +4,11 @@ Uses the `zpool` CLI to report on the state of ZFS pools. Written
 and tested on Solaris, but will likely work on FreeBSD and, if you
 must, Linux.
 
+## Options
+
+* **`fields`**: a list of metrics you wish to collect. For all
+  metrics, use the magic value `__all__`.
+
 ## Statistics
 
 Collecting information on four pools on an 8-core i7 system takes
@@ -29,8 +34,8 @@ Additionally, the health of the pool is reported, as an integer.
 
 The values for this metric are:
 
-0: `ONLINE`
-1: `DEGRADED`
-2: `SUSPENDED`
-3: `UNAVAIL`
-4: uknown state
+* 0: `ONLINE`
+* 1: `DEGRADED`
+* 2: `SUSPENDED`
+* 3: `UNAVAIL`
+* 4: uknown state

@@ -69,20 +69,20 @@ class ZpoolCollector(diamond.collector.Collector):
             (name, size, alloc, free, cap, dedup, health,
                     altroot) = p.split();
 
-            if 'size' in self.config['fields']:
+            if sh.wanted('size', self.config['fields']):
                 self.publish('%s.size' % name, sh.bytify(alloc))
 
-            if 'alloc' in self.config['fields']:
+            if sh.wanted('alloc', self.config['fields']):
                 self.publish('%s.alloc' % name, sh.bytify(alloc))
 
-            if 'free' in self.config['fields']:
+            if sh.wanted('free', self.config['fields']):
                 self.publish('%s.free' % name, sh.bytify(free))
 
-            if 'cap' in self.config['fields']:
+            if sh.wanted('cap', self.config['fields']):
                 self.publish('%s.cap' % name, float(cap[:-1]))
 
-            if 'dedup' in self.config['fields']:
+            if sh.wanted('dedup', self.config['fields']):
                 self.publish('%s.dedup' % name, float(dedup[:-1]))
 
-            if 'health' in self.config['fields']:
+            if sh.wanted('health', self.config['fields']):
                 self.publish('%s.health' % name, self.health_as_int(health))
