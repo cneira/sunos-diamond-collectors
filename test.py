@@ -31,6 +31,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                              'collectors')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                              'kstat')))
+sys.path.append('/opt/diamond/lib/python2.7/site-packages/')
 
 
 def run_only(func, predicate):
