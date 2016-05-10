@@ -2,13 +2,14 @@
 
 """
 
-Takes ZFS arc kstats and turns them into metrics. Does not do the
-renaming that the collectd equivalent does, which I think makes it
-more future-proof.
+Takes ZFS arc kstats (and related) and turns them into metrics. Does not
+do the renaming that the collectd equivalent does, which I think makes
+it more future-proof.
 
-By default all ARC stats are dumped. If you wish to be more
+By default all stats are dumped from the `arcstats`, `vdev_cache_stats`
+and `zfetchstats` modules. If you wish to be more
 selective, you can supply a comma-separated list of the kstat names
-you want.
+you want via the `arc_stats`, `vdev_stats`, and `zfetch_stats` stats.
 
 #### Dependencies
 
@@ -18,22 +19,25 @@ you want.
 """
 
 import diamond.collector
-import kstat
+import sunos_helpers as sh
 
 class ZFSArcCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(ZFSArcCollector, self).get_default_config()
         config.update({
-            'path':  'zfs.arc',
-            'stats': False,
+            'path':         'zfs',
+            'arcstats':    '__all__',
+            'vdev_cache_stats':   '__all__',
+            'zfetchstats': '__all__',
+
             })
         return config
 
     def collect(self):
-        ko = kstat.Kstat('zfs')
-        for stat, val in ko.__getitem__(['zfs', 0, 'arcstats']).items():
-            if not self.config['stats'] or (self.config['stats'] and
-                    stat in self.config['stats']):
-                if isinstance(val, long):
-                    self.publish(stat, val)
+
+        for grp in ('arcstats', 'vdev_cache_stats', 'zfetchstats'):
+            if self.config[grp]:
+                for k, v in sh.kstat_name('zfs:0:%s' % grp).iteritems():
+                    if sh.wanted(k, self.config[grp]):
+                        self.publish('.'.join([grp, k]), v)
