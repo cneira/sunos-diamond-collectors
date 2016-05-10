@@ -1,5 +1,5 @@
 import diamond.collector
-import sunos_helpers
+import sunos_helpers as sh
 
 class SunOSNetworkCollector(diamond.collector.Collector):
 
@@ -16,7 +16,7 @@ class SunOSNetworkCollector(diamond.collector.Collector):
         return config
 
     def zoneadm(self):
-        return sunos_helpers.run_cmd('/usr/sbin/zoneadm list -pc')
+        return sh.run_cmd('/usr/sbin/zoneadm list -pc')
 
     def zone_map(self, zoneadm, passthru = '__all__'):
         #
@@ -52,8 +52,7 @@ class SunOSNetworkCollector(diamond.collector.Collector):
 
         for nic in self.config['nic']:
             for zid, zname in zm.items():
-                for k, v in sunos_helpers.kstat_name(
+                for k, v in sh.kstat_name(
                         'link:%s:%s' % (zid, nic)).iteritems():
-                    if (not 'fields' in self.config) or (k in
-                    self.config['fields']):
+                    if sh.wanted(k, self.config['fields']):
                       self.publish('%s.%s.%s' % (zname, nic, k), v)
