@@ -38,8 +38,11 @@ class SmfSvcCollector(diamond.collector.Collector):
             })
         return config
 
+    def svcs(self):
+        return sunos_helpers.run_cmd('/bin/svcs -aHo state')
+
     def collect(self):
-        svcs = sunos_helpers.run_cmd('/bin/svcs -aHo state')
+        svcs = self.svcs()
 
         for state in self.config['states']:
             self.publish(state, svcs.count(state))
