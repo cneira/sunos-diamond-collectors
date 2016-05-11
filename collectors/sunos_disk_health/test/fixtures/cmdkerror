@@ -1,0 +1,10 @@
+---
+'cmdk0,error.hard_errors': 0
+'cmdk0,error.soft_errors': 0
+'cmdk0,error.transport_errors': 0
+'cmdk1,error.hard_errors': 15
+'cmdk1,error.soft_errors': 1023
+'cmdk1,error.transport_errors': 756
+'cmdk2,error.hard_errors': 0
+'cmdk2,error.soft_errors': 40
+'cmdk2,error.transport_errors': 0
