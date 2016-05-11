@@ -1,4 +1,5 @@
 from os import path as p
+import yaml
 
 def read_fixture(includer, fixture):
     """
@@ -18,3 +19,13 @@ def read_fixture(includer, fixture):
     with open(p.join(p.dirname(p.realpath(includer)), 'fixtures',
             fixture)) as fh:
         return fh.read().strip().split('\n')
+
+def load_fixture(includer, fixture):
+    """
+    Returns a dict loaded from a fixture which is assumed to be a YAML
+    file.
+    """
+
+    with open(p.join(p.dirname(p.realpath(includer)), 'fixtures',
+            fixture)) as fh:
+        return yaml.load(fh)
