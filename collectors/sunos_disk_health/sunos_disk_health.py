@@ -10,9 +10,10 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
             })
         return config
 
-    def collect(self):
-        kstats = sunos_helpers.kstat_module('cmdkerror', '.* Errors')
+    def kstats(self):
+        return sunos_helpers.kstat_module('cmdkerror', '.* Errors')
 
-        for name, val in kstats.items():
+    def collect(self):
+        for name, val in self.kstats().items():
             self.publish(name.replace(',error', ''), val)
 
