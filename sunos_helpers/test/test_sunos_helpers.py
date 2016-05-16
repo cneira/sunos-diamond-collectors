@@ -35,8 +35,9 @@ class TestSunOSHelpers(unittest.TestCase):
         # privilege:
         #   System Telemetry:solaris:cmd:RO::/usr/bin/id:uid=0;euid=0
         #
-        self.assertNotRegexpMatches(sh.run_cmd('/usr/bin/id'), 'root')
-        self.assertRegexpMatches(sh.run_cmd('/usr/bin/id', True), 'root')
+        if 'System Telemetry' in sh.run_cmd('/bin/profiles'):
+            self.assertNotRegexpMatches(sh.run_cmd('/usr/bin/id'), 'root')
+            self.assertRegexpMatches(sh.run_cmd('/usr/bin/id', True), 'root')
 
     def test_bytify(self):
         self.assertEqual(sh.bytify('2K'), 2048)
