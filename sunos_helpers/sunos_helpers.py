@@ -140,9 +140,7 @@ def kstat_name(kname):
     except KeyError:
         return {}
 
-    return {k: v for k, v in raw.iteritems()
-            if k != 'class'}
-            #if k != 'crtime' and k != 'snaptime' and k != 'class'}
+    return prune(raw)
 
 def kstat_module(module, name_ptn):
     """
