@@ -117,7 +117,9 @@ def kstat_class(kclass):
 def kstat_name(kname):
     """
     fetch kstats for multiple named stat groups within a module,
-    removing the crtime and snaptime.  For the NFS stuff.
+    removing the crtime and snaptime.
+
+    kname is of the form 'caps:117:swapresv_zone_117'
     """
 
     assert isinstance(kname, basestring)
@@ -139,7 +141,8 @@ def kstat_name(kname):
         return {}
 
     return {k: v for k, v in raw.iteritems()
-            if k != 'crtime' and k != 'snaptime' and k != 'class'}
+            if k != 'class'}
+            #if k != 'crtime' and k != 'snaptime' and k != 'class'}
 
 def kstat_module(module, name_ptn):
     """
@@ -170,7 +173,6 @@ def kstat_module(module, name_ptn):
 
     return items
 
-
 def kstat_val(kname):
     """
     Returns a single kstat value. I'll probably need something much
@@ -196,3 +198,12 @@ def kstat_val(kname):
     except:
         return False
 
+def prune(kstat):
+    """
+    We don't bother storing `crtime`, and anything other than
+    `snaptime` that isn't a long.
+    """
+    assert isinstance(kstat, dict)
+
+    return { k: v for k, v in kstat.items() if k == 'snaptime' or
+            isinstance(v, long) }

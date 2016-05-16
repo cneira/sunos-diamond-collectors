@@ -121,5 +121,24 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertIs(sh.kstat_val('NOMATCH:0:system_pages:pp_kernel'),
                 False)
 
+    def test_prune(self):
+        with self.assertRaises(AssertionError):
+             sh.prune('string')
+
+        pruned = sh.prune(
+                    { 'usage': 137822208L,
+                      'zonename': 'shark-ws\x00',
+                      'crtime': 'hrtime_object',
+                      'value': 18446744073709551615L,
+                      'snaptime': 'hrtime_object',
+                    })
+
+        self.assertIsInstance(pruned, dict)
+        self.assertEqual(pruned,
+                    { 'usage': 137822208L,
+                      'value': 18446744073709551615L,
+                      'snaptime': 'hrtime_object',
+                    })
+
 if __name__ == '__main__':
     unittest.main()
