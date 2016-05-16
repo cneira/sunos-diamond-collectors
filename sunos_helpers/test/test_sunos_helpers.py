@@ -89,9 +89,9 @@ class TestSunOSHelpers(unittest.TestCase):
         with self.assertRaises(ValueError):
             sh.kstat_name('nfs:0')
 
-        self.assertIsInstance(sh.kstat_name('nfs:4:nfs4'), dict)
-        self.assertGreater(len(sh.kstat_name('nfs:4:nfs4')), 10)
-        self.assertIn('rtime', sh.kstat_name('nfs:4:nfs4').keys())
+        self.assertIsInstance(sh.kstat_name('cpu:0:vm'), dict)
+        self.assertGreater(len(sh.kstat_name('cpu:0:vm')), 10)
+        self.assertIn('zfod', sh.kstat_name('cpu:0:vm').keys())
         self.assertIsInstance(sh.kstat_name('nfs:99:nfs4'), dict)
         self.assertEqual(len(sh.kstat_name('nfs:99:nfs4')), 0)
 
