@@ -142,6 +142,20 @@ def kstat_name(kname):
 
     return prune(raw)
 
+def kstat_raw_module(module):
+    assert isinstance(module, basestring)
+    ko = kstat.Kstat(module)
+    raw = {}
+
+    for x in ko._iterksp():
+        kmodule, kinstance, kname, kclass, ktype, ksp = x
+        astat =  ko[kmodule, kinstance, kname]
+
+        for k, v in astat.items():
+            raw[k] = v
+
+    return prune(raw)
+
 def kstat_module(module, name_ptn):
     """
     Return a dict of everything matching "name_ptn" in all names and
