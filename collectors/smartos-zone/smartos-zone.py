@@ -2,10 +2,10 @@ import diamond.collector
 import sunos_helpers as sh
 from sys import maxint
 
-class TenantCollector(diamond.collector.Collector):
+class SmartOSZoneCollector(diamond.collector.Collector):
 
     def get_default_config(self):
-        config = super(TenantCollector, self).get_default_config()
+        config = super(SmartOSZoneCollector, self).get_default_config()
         config.update({
             'path':   'tenant',
             })
