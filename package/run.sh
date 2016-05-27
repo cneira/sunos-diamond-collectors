@@ -11,10 +11,7 @@ ME=$(readlink -f $0)
 BASE=$(print $ME | sed 's|/share.*||')
 CDIR=${ME%/*}
 
-export PYTHONPATH=${BASE}/share/sunos-diamond-collectors/kstat
-
-${BASE}/bin/python
-#print $BASE
+export PYTHONPATH=${BASE}/share/sunos-diamond-collectors
 
 [[ $(uname -v) == "joyent"* ]] && CF=sample-config-smartos.conf \
                                || CF=sample-config-solaris11.conf
