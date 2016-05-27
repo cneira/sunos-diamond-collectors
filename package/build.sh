@@ -32,12 +32,9 @@ function make_tarball
 	#print "  creating build directory"
 	print "  extracting base archive"
 	$TAR -zxf ${PYTHON_DIR}/python-diamond-${1}.tar.gz -C $TMPDIR
-
-	git clone https://github.com/snltd/sunos-diamond-collectors \
-		${TMPDIR}/diamond/share/sunos-diamond-collectors
-
-	git clone https://github.com/pyhedgehog/kstat \
-		${TMPDIR}/diamond/share/kstat
+    COL_DIR=${TMPDIR}/diamond/share/sunos-diamond-collectors
+	git clone https://github.com/snltd/sunos-diamond-collectors $COL_DIR
+	git clone https://github.com/pyhedgehog/kstat ${COL_DIR}/kstat
 }
 
 for platform in solaris11 #smartos
