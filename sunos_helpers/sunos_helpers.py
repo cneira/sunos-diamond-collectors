@@ -2,9 +2,8 @@
 A library of functions to support my SunOS collectors
 """
 
-import subprocess, re
+import subprocess, re, kstat
 from os import path
-import kstat
 
 #-------------------------------------------------------------------------
 # Command execution stuff
@@ -87,135 +86,70 @@ def bytify(size, use_thousands = False):
 #-------------------------------------------------------------------------
 # kstat stuff
 
-"""
-Rather than write a complex, comprehensive general kstat accessor,
-I'm making up what I need as I need it. This will (already is) turn
-into a hotch-potch of similar methods but I'll cope.
-"""
-
-def kstat_class(kclass):
+def kstat_req_parse(descriptor):
     """
-    fetch kstats for all instances and names of the given class.
-    Discards anything that's not a 'long'. This might turn out not
-    to be right in every case, but at the moment, it is.
+    return a dict of kstat parts
     """
+    parts = descriptor.split(':', 4)
 
-    assert isinstance(kclass, basestring)
-
-    ko = kstat.Kstat()
     ret = {}
 
-    for module, instance, name, ks_class, ks_type, ksp in ko._iterksp():
-        if ks_class == kclass:
-            ret[name] = {}
-            astat =  ko[module, instance, name]
-            for k, v in astat.items():
-                if isinstance(v, long): ret[name][k] = v
+    for key in ['module', 'instance', 'name', 'statistic']:
+        try:
+            value = parts.pop(0)
+            if not value: raise
+            ret[key] = value
+        except:
+            ret[key] = None
 
+    if ret['instance']: ret['instance'] = int(ret['instance'])
     return ret
 
-def kstat_name(kname):
+def get_kstat(descriptor, only_num=True, no_times=False):
     """
-    fetch kstats for multiple named stat groups within a module,
-    removing the crtime and snaptime.
+    A general-purpose kstat accessor.
 
-    kname is of the form 'caps:117:swapresv_zone_117'
+    :param descriptor: A standard kstat name like 'cpu:0:vm:softlock'.
+        Omitting a field equates to a wildcard, just like kstat(1m). The
+        module (first field) *must* be supplied. Mandatory. (string)
+    :param only_num: By default, only numeric values are returned, If
+        you want things which are non-numeric, set this to False. (bool)
+    :param no_times: By default, if a statistic name is not specified,
+        the 'crtime' and 'snaptime' fields will be returned, as longs.
+        Set this to True to omit them. (bool)
+    :returns: a dict of 'kstat_name: value' pairs. All keys are
+        lower-cased, and whitespace is replaced with underscores. If
+        there are no matches, you get an empty dict. (dict)
+    :raises: ValueError if arguments are of the wrong type.
     """
+    assert isinstance(descriptor, basestring)
+    assert isinstance(only_num, bool)
+    assert isinstance(no_times, bool)
 
-    assert isinstance(kname, basestring)
+    d = kstat_req_parse(descriptor)
+    ret ={}
 
-    ko = kstat.Kstat(kname)
-    el = kname.split(':')
+    if not d['module']: raise ValueError
 
-    if len(el) != 3:
-        raise ValueError('kname is not three parts')
+    ko = kstat.Kstat(d['module'])
 
-    try:
-        instance = int(el[1])
-    except:
-        raise ValueError('instance is not an integer')
-
-    try:
-        raw = ko[el[0], instance, el[2]]
-    except KeyError:
-        return {}
-
-    return prune(raw)
-
-def kstat_raw_module(module):
-    assert isinstance(module, basestring)
-    ko = kstat.Kstat(module)
-    raw = {}
-
-    for x in ko._iterksp():
-        kmodule, kinstance, kname, kclass, ktype, ksp = x
-        astat =  ko[kmodule, kinstance, kname]
+    for mod, inst, name, kclass, ks_type, ksp in ko._iterksp():
+        if d['instance'] != None and inst != d['instance']: continue
+        if d['name'] != None and name != d['name']: continue
+        astat = ko[mod, inst, name]
 
         for k, v in astat.items():
-            raw[k] = v
+            if d['statistic'] != None and k != d['statistic']: continue
+            if k == 'snaptime' or k == 'crtime':
+                if no_times: continue
+                v = long(v)
+            if only_num:
+                try:
+                    float(v)
+                except:
+                    continue
 
-    return prune(raw)
+            k = k.lower().replace(' ', '_')
+            ret['%s:%d:%s:%s' % (mod, inst, name, k)] = v
 
-def kstat_module(module, name_ptn):
-    """
-    Return a dict of everything matching "name_ptn" in all names and
-    classes underneath "module".
-
-    This was written for the disk_error collector, where it fetches,
-    for instance the 'Hard Error' value from every `cmdkerror` name
-    space.
-
-    The kstat name is lowercased and whitespace replaced with an
-    underscore.
-    """
-
-    assert isinstance(module, basestring)
-    assert isinstance(name_ptn, basestring)
-
-    ko = kstat.Kstat(module)
-    items = {}
-
-    for x in ko._iterksp():
-        kmodule, kinstance, kname, kclass, ktype, ksp = x
-        astat =  ko[kmodule, kinstance, kname]
-
-        for k, v in astat.items():
-            if re.match(name_ptn, k):
-                items['%s.%s' % (kname, k.lower().replace(' ', '_'))] = v
-
-    return items
-
-def kstat_val(kname):
-    """
-    Returns a single kstat value. I'll probably need something much
-    more generic soon, but for now this does the job.
-    """
-
-    assert isinstance(kname, basestring)
-
-    el = kname.split(':')
-
-    if len(el) != 4:
-        raise ValueError('kstat name is not four parts')
-
-    try:
-        instance = int(el[1])
-    except:
-        raise ValueError('instance is not an integer')
-
-    ko = kstat.Kstat()
-
-    try:
-        return ko.__getitem__([el[0], instance, el[2]])[el[3]]
-    except:
-        return False
-
-def prune(kstat):
-    """
-    We don't bother storing `crtime`, and anything other than
-    `snaptime` that isn't a long.
-    """
-    assert isinstance(kstat, dict)
-
-    return { k: v for k, v in kstat.items() if k == 'snaptime' or
-            isinstance(v, long) }
+    return ret

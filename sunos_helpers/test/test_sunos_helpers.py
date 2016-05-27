@@ -67,79 +67,61 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertFalse(sh.wanted('sda', want))
         self.assertTrue(sh.wanted('did99', want))
 
-    def test_kstat_class(self):
-        res = sh.kstat_class('disk')
+    def test_kstat_req_parse(self):
+        self.assertEqual(sh.kstat_req_parse('nfs:3:nfs_server:calls'),
+                { 'module': 'nfs', 'instance': 3, 'name': 'nfs_server',
+                    'statistic': 'calls' })
+        self.assertEqual(sh.kstat_req_parse('nfs:3:nfs_server'),
+                { 'module': 'nfs', 'instance': 3, 'name': 'nfs_server',
+                    'statistic': None })
+        self.assertEqual(sh.kstat_req_parse('nfs:3'),
+                { 'module': 'nfs', 'instance': 3, 'name': None,
+                    'statistic': None })
+        self.assertEqual(sh.kstat_req_parse('nfs'),
+                { 'module': 'nfs', 'instance': None, 'name': None,
+                    'statistic': None })
+        self.assertEqual(sh.kstat_req_parse('nfs::nfs_server'),
+                { 'module': 'nfs', 'instance': None, 'name':
+                'nfs_server', 'statistic': None })
+        self.assertEqual(sh.kstat_req_parse('nfs:::calls'),
+                { 'module': 'nfs', 'instance': None, 'name': None,
+                'statistic': 'calls' })
+
+    def test_get_kstat(self):
+        with self.assertRaises(ValueError):
+            sh.get_kstat(':3:nfs_server:calls')
+
+        self.assertEqual(sh.get_kstat('nosuch:0:kstat:name'), {})
+        self.assertEqual(sh.get_kstat('nosuch:0::name'), {})
+        self.assertEqual(sh.get_kstat('nosuch:::name'), {})
+        self.assertEqual(sh.get_kstat('nosuch:0:kstat'), {})
+        self.assertEqual(sh.get_kstat('nosuch:0'), {})
+        self.assertEqual(sh.get_kstat('nosuch'), {})
+
+        self.assertEqual(len(sh.get_kstat('cpu::vm:pgin')),
+            len(sh.run_cmd('/usr/sbin/psrinfo')))
+        self.assertEqual(len(sh.get_kstat('cpu:0:vm:pgin')), 1)
+
+        res = sh.get_kstat('cpu:0:vm')
         self.assertIsInstance(res, dict)
-        self.assertGreater(len(res), 0)
-        first = res.keys()[0]
-        self.assertGreater(len(res[first].keys()), 0)
-        self.assertIn('nread', (res[first].keys()))
-        self.assertIn('nwritten', (res[first].keys()))
 
-        # This might not work on other boxes. did, maybe?
-        for k in res.keys():
-            self.assertRegexpMatches(k, '^cmdk\d+$')
+        self.assertIn('cpu:0:vm:execpgin', res.keys())
+        self.assertIn('cpu:0:vm:crtime', res.keys())
 
-        for v in res[first].values():
-            self.assertIsInstance(v, long)
+        self.assertNotIn('cpu:0:vm:crtime', sh.get_kstat('cpu:0:vm',
+            no_times=True))
 
-    def test_kstat_name(self):
-        with self.assertRaises(ValueError):
-            sh.kstat_name('nfs:NOT_ALLOWED:nfs4')
+        self.assertNotIn('cpu:0:vm:crtime', sh.get_kstat('cpu:0:vm',
+            no_times=True))
 
-        with self.assertRaises(ValueError):
-            sh.kstat_name('nfs:0')
+        self.assertNotIn('cpu_info:0:cpu_info0:brand',
+                sh.get_kstat('cpu_info:0:cpu_info0').keys())
 
-        self.assertIsInstance(sh.kstat_name('cpu:0:vm'), dict)
-        self.assertGreater(len(sh.kstat_name('cpu:0:vm')), 10)
-        self.assertIn('zfod', sh.kstat_name('cpu:0:vm').keys())
-        self.assertIsInstance(sh.kstat_name('nfs:99:nfs4'), dict)
-        self.assertEqual(len(sh.kstat_name('nfs:99:nfs4')), 0)
+        self.assertIn('cpu_info:0:cpu_info0:brand',
+                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False).keys())
 
-    def test_kstat_module(self):
-        self.assertIsInstance(sh.kstat_module('NOMATCH', 'NOMATCH'), dict)
-        self.assertEqual(len(sh.kstat_module('NOMATCH', 'NOMATCH')), 0)
-        self.assertIsInstance(sh.kstat_module('nfs', 'NOMATCH'), dict)
-        self.assertEqual(len(sh.kstat_module('nfs', 'NOMATCH')), 0)
-        self.assertIsInstance(sh.kstat_module('cmdkerror', 'Size'), dict)
-        self.assertGreater(len(sh.kstat_module('cmdkerror', 'Size')), 0)
-        self.assertIn('cmdk0,error.size',
-                sh.kstat_module('cmdkerror', 'Size').keys())
-
-    def test_kstat_val(self):
-        with self.assertRaises(ValueError):
-            sh.kstat_name('nfs:NOT_ALLOWED:nfs4')
-
-        with self.assertRaises(ValueError):
-            sh.kstat_name('nfs:0')
-
-        self.assertIsInstance(sh.kstat_val(
-            'unix:0:system_pages:pp_kernel'), long)
-        self.assertGreater(sh.kstat_val('unix:0:system_pages:pp_kernel'), 0)
-
-        self.assertIs(sh.kstat_val('unix:0:system_pages:NOMATCH'), False)
-        self.assertIs(sh.kstat_val('unix:0:NOMATCH:pp_kernel'), False)
-        self.assertIs(sh.kstat_val('NOMATCH:0:system_pages:pp_kernel'),
-                False)
-
-    def test_prune(self):
-        with self.assertRaises(AssertionError):
-             sh.prune('string')
-
-        pruned = sh.prune(
-                    { 'usage': 137822208L,
-                      'zonename': 'shark-ws\x00',
-                      'crtime': 'hrtime_object',
-                      'value': 18446744073709551615L,
-                      'snaptime': 'hrtime_object',
-                    })
-
-        self.assertIsInstance(pruned, dict)
-        self.assertEqual(pruned,
-                    { 'usage': 137822208L,
-                      'value': 18446744073709551615L,
-                      'snaptime': 'hrtime_object',
-                    })
+        self.assertNotRegexpMatches(''.join(sh.get_kstat('ip:0:icmp').keys()),
+                '[A-Z]')
 
 if __name__ == '__main__':
     unittest.main()
