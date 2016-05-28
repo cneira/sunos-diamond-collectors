@@ -91,7 +91,6 @@ def bytify(size, use_thousands = False):
     :param size: A size such as '5G' or '0.5P'. (string)
     :param use_thousands: by default we assume 1024 bytes in a kilobyte
         etc. Set this to True to assumer 1000. (bool)
-    :raises: ValueError if we can't make sense of 'size'.
     :return: the number of bytes. (float)
 
     """
@@ -104,7 +103,7 @@ def bytify(size, use_thousands = False):
         exponent = sizes.index(chunks.group(2))
         return float(chunks.group(1)) * multiplier ** exponent
     except:
-        raise ValueError
+        return size
 
 #-------------------------------------------------------------------------
 # kstat stuff
