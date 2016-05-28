@@ -64,10 +64,20 @@ class TestSunOSHelpers(unittest.TestCase):
         want = ['cmdk0', 'cmdk2']
         self.assertFalse(sh.wanted('__all__', want))
         self.assertTrue(sh.wanted('anything', '__all__'))
+        self.assertFalse(sh.wanted('anything', '__none__'))
         self.assertTrue(sh.wanted('word', 'word'))
         self.assertTrue(sh.wanted('cmdk0', want))
         self.assertFalse(sh.wanted('cmdk1', want))
         self.assertFalse(sh.wanted('pen', 'pencil'))
+
+        self.assertTrue(sh.wanted('cmdk0', 'cmdk\d+', regex=True))
+        self.assertTrue(sh.wanted('cmdk2', '^.*2$', regex=True))
+
+        want = ['cmdk[0-3]', 'did.*']
+        self.assertTrue(sh.wanted('cmdk1', want, regex=True))
+        self.assertFalse(sh.wanted('cmdk5', want, regex=True))
+        self.assertFalse(sh.wanted('sda', want, regex=True))
+        self.assertTrue(sh.wanted('did99', want, regex=True))
 
     def test_kstat_req_parse(self):
         self.assertEqual(sh.kstat_req_parse('nfs:3:nfs_server:calls'),

@@ -53,19 +53,20 @@ def run_cmd(cmd_str, pfexec=False):
 #-------------------------------------------------------------------------
 # Miscellany
 
-def wanted(have, want):
+def wanted(have, want, regex=False):
     """
     A very simple filtering method to allow users to simply list the
     metrics they want, rather than having to deal with regexes and
-    whitelists or blacklists. This method used to support regexes too.
-    Dig through the commit history if that needs to come back.
+    whitelists or blacklists.
 
-    :param have: is the thing we know we have. This usually comes from an
+    :param have: Is the thing we know we have. This usually comes from an
         iteratable. (string)
-    :param want: could be a list. True if 'want' is a member.  Could be
-        '__all__', in which case we want whatever we 'have'. (list,
-        string)
-    :returns: True if we have what we want, otherwise False
+    :param want: Could be a list. True if 'want' is a member.  Could be
+        '__all__', in which case we want whatever we 'have'. Could be
+        '__none__', in which case we don't want anything. (list, string)
+    :param regex: Normally we only return True on "plain text" matches.
+        If you wish to match on patterns, set this to True. (bool)
+    :returns: True if we have what we want, otherwise False. (bool)
     """
 
     assert isinstance(have, basestring)
@@ -73,8 +74,17 @@ def wanted(have, want):
     if want == '__all__': return True
     if want == '__none__' or not want: return False
 
-    if isinstance(want, basestring):
-        return True if want == have else False
+    if regex:
+        if isinstance(want, basestring):
+            if re.match(want, have):
+                return True
+        else:
+            for item in want:
+                if re.match(item, have): return True
+
+    else:
+        if isinstance(want, basestring):
+            return True if want == have else False
 
     if have in want: return True
 
@@ -93,7 +103,6 @@ def bytify(size, use_thousands = False):
         etc. Set this to True to assumer 1000. (bool)
     :raises: ValueError if we don't know what to do with the input.
     :return: the number of bytes. (float)
-
     """
 
     sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
