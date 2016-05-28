@@ -50,6 +50,15 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.bytify('0.5T'), 549755813888)
         self.assertEqual(sh.bytify('0.5T', True), 500000000000)
         self.assertEqual(sh.bytify(400, True), 400)
+        self.assertEqual(sh.bytify('400', True), 400)
+        self.assertEqual(sh.bytify(-400, True), -400)
+        self.assertEqual(sh.bytify('-6.12G', True), -6120000000)
+
+        with self.assertRaises(ValueError):
+            sh.bytify('10L')
+
+        with self.assertRaises(ValueError):
+            sh.bytify([1, 2, 3])
 
     def test_wanted(self):
         want = ['cmdk0', 'cmdk2']

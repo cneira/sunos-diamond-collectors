@@ -91,19 +91,24 @@ def bytify(size, use_thousands = False):
     :param size: A size such as '5G' or '0.5P'. (string)
     :param use_thousands: by default we assume 1024 bytes in a kilobyte
         etc. Set this to True to assumer 1000. (bool)
+    :raises: ValueError if we don't know what to do with the input.
     :return: the number of bytes. (float)
 
     """
+
     sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
 
     multiplier = 1000 if use_thousands else 1024
 
     try:
-        chunks = re.match("^([\d\.]+)(\w)$", size)
+        chunks = re.match("^(-?[\d\.]+)(\w)$", size)
         exponent = sizes.index(chunks.group(2))
         return float(chunks.group(1)) * multiplier ** exponent
     except:
-        return size
+        try:
+            return float(size)
+        except:
+            raise ValueError
 
 #-------------------------------------------------------------------------
 # kstat stuff
