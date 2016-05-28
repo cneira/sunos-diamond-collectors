@@ -43,6 +43,13 @@ enabled = True
 nfs_vers = 4
 ```
 
+## Bugs and Caveats
+
+The kstat values are reported "raw": that is `crtime` and `snaptime` are
+not used to calculate differentials. Your graphing software should
+calculate rates, but they will not be as accurate as if they were
+calculated from the high-resolution kstat times.
+
 ## Metric Paths
 
 The following metrics are available in Solaris 11.3. YMMV depending on
