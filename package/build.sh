@@ -16,8 +16,6 @@
 
 PYTHON_DIR=/storage/software/python
 which gtar >/dev/null && TAR=gtar || TAR=tar
-#TMPDIR=/tmp/diamond_build
-TMPDIR=/opt
 
 # For various legacy reasons I have to unpack the Solaris and SmartOS
 # tarballs in different locations
@@ -26,18 +24,20 @@ function make_tarball
 {
 	# $1 is the OS type, 'solaris' or 'smartos'
 
-	mkdir -p $TMPDIR
-	#print "  flushing build directory"
-	rm -fr ${TMPDIR}/diamond
-	#print "  creating build directory"
-	print "  extracting base archive"
+    TMPDIR=$(mktemp -d)
+	print "building in $TMPDIR"
+	print "extracting base archive"
 	$TAR -zxf ${PYTHON_DIR}/python-diamond-${1}.tar.gz -C $TMPDIR
     COL_DIR=${TMPDIR}/diamond/share/sunos-diamond-collectors
 	git clone https://github.com/snltd/sunos-diamond-collectors $COL_DIR
 	git clone https://github.com/pyhedgehog/kstat ${COL_DIR}/kstat
+    OUT=${PYTHON_DIR}/diamond-${1}.tar.gz
+    print "creating artefact $OUT"
+    $TAR zcf $OUT -C $TMPDIR diamond
+    rm -fr $TMPDIR
 }
 
-for platform in solaris11 #smartos
+for platform in solaris11 smartos
 do
 	print "doing the do for $platform"
 	make_tarball $platform
