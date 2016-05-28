@@ -11,8 +11,17 @@ from os import path
 def run_cmd(cmd_str, pfexec=False):
     """
     Run a command and return the output. Multiline output is sent
-    back as an array, single line as a string. Lets you elevate
-    privs with pfexec if you wish it.
+    back as an array, single line as a string.
+
+    :param cmd_str: The command to run, as a string. Only allows one
+        command (so no pipes) and the command must be fully qualified.
+        (string)
+    :param pfexec: Set to True to run the command with `pfexec`. (bool)
+    :raises: NotImplementedErrror if the command is not found or if
+        `pfexec` is requested but not present. An exception detailing
+        the error if the command exits nonzero.
+    :returns: a string if the command outputs a single line, otherwise
+        an array with each line of output as an element.
     """
 
     cmd_chunks = cmd_str.split()
@@ -75,6 +84,17 @@ def wanted(have, want):
 # Conversion stuff
 
 def bytify(size, use_thousands = False):
+    """
+    Feed it a number with an ISO suffix and it will give you back the
+    bytes in that number.
+
+    :param size: A size such as '5G' or '0.5P'. (string)
+    :param use_thousands: by default we assume 1024 bytes in a kilobyte
+        etc. Set this to True to assumer 1000. (bool)
+    :raises: ValueError if we can't make sense of 'size'.
+    :return: the number of bytes. (float)
+
+    """
     sizes = ['b', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
 
     multiplier = 1000 if use_thousands else 1024
@@ -84,14 +104,20 @@ def bytify(size, use_thousands = False):
         exponent = sizes.index(chunks.group(2))
         return float(chunks.group(1)) * multiplier ** exponent
     except:
-        return size
+        raise ValueError
 
 #-------------------------------------------------------------------------
 # kstat stuff
 
 def kstat_req_parse(descriptor):
     """
-    return a dict of kstat parts
+    Return a dict of kstat parts.
+
+    :param descriptor: The description of a kstat in one to four
+        colon-separated parts. (string)
+    :returns: a dict with keys 'module', 'instance', 'name', and
+        'statistic'. Values are the parts of the kstat name passed in,
+        or None.
     """
     parts = descriptor.split(':', 4)
 
