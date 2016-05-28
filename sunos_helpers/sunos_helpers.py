@@ -46,25 +46,28 @@ def run_cmd(cmd_str, pfexec=False):
 
 def wanted(have, want):
     """
-    A filtering method.
-    have: is the thing we know we have. This usually comes from an
-        iteratable, and is a string.
-    want: could be a list. True if 'want' is a member. Could be a
-        regex, or a list containing a regex: compare. Could be
-        '__all__', in which case we want whatever we 'have'.
+    A very simple filtering method to allow users to simply list the
+    metrics they want, rather than having to deal with regexes and
+    whitelists or blacklists. This method used to support regexes too.
+    Dig through the commit history if that needs to come back.
+
+    :param have: is the thing we know we have. This usually comes from an
+        iteratable. (string)
+    :param want: could be a list. True if 'want' is a member.  Could be
+        '__all__', in which case we want whatever we 'have'. (list,
+        string)
+    :returns: True if we have what we want, otherwise False
     """
 
     assert isinstance(have, basestring)
 
     if want == '__all__': return True
-
-    if have in want: return True
+    if want == '__none__' or not want: return False
 
     if isinstance(want, basestring):
-        if re.match(want, have): return True
-    else:
-        for item in want:
-            if re.match(item, have): return True
+        return True if want == have else False
+
+    if have in want: return True
 
     return False
 
