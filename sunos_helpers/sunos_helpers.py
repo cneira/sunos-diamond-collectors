@@ -105,7 +105,7 @@ def kstat_req_parse(descriptor):
     if ret['instance']: ret['instance'] = int(ret['instance'])
     return ret
 
-def get_kstat(descriptor, only_num=True, no_times=False):
+def get_kstat(descriptor, only_num=True, no_times=False, terse=False):
     """
     A general-purpose kstat accessor.
 
@@ -117,6 +117,12 @@ def get_kstat(descriptor, only_num=True, no_times=False):
     :param no_times: By default, if a statistic name is not specified,
         the 'crtime' and 'snaptime' fields will be returned, as longs.
         Set this to True to omit them. (bool)
+    :param terse: The keys of the returned dict will normally contain
+        the full, four-part kstat name. If you set this parameter to
+        True, only the statistic name will be used in the key. This
+        option is potentially risky, as multiple instances will
+        overwrite one another. Useful, to to be used with caution.
+        (bool)
     :returns: a dict of 'kstat_name: value' pairs. All keys are
         lower-cased, and whitespace is replaced with underscores. If
         there are no matches, you get an empty dict. (dict)
@@ -150,6 +156,7 @@ def get_kstat(descriptor, only_num=True, no_times=False):
                     continue
 
             k = k.lower().replace(' ', '_')
-            ret['%s:%d:%s:%s' % (mod, inst, name, k)] = v
+            if not terse: k = '%s:%d:%s:%s' % (mod, inst, name, k)
+            ret[k] = v
 
     return ret

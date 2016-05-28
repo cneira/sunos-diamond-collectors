@@ -120,6 +120,15 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertIn('cpu_info:0:cpu_info0:brand',
                 sh.get_kstat('cpu_info:0:cpu_info0', only_num=False).keys())
 
+        self.assertIn('brand',
+                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
+                    terse=True).keys())
+
+        self.assertNotIn('cpu_info:0:cpu_info0:brand',
+                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
+                    terse=True).keys())
+
+
         self.assertNotRegexpMatches(''.join(sh.get_kstat('ip:0:icmp').keys()),
                 '[A-Z]')
 
