@@ -147,7 +147,8 @@ def kstat_req_parse(descriptor):
     if ret['instance']: ret['instance'] = int(ret['instance'])
     return ret
 
-def get_kstat(descriptor, only_num=True, no_times=False, terse=False):
+def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
+        ks_class = None):
     """
     A general-purpose kstat accessor.
 
@@ -165,6 +166,9 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False):
         option is potentially risky, as multiple instances will
         overwrite one another. Useful, to to be used with caution.
         (bool)
+    :param ks_class: Allows you to filter on kstat class. To retrieve
+        stats for a given class across all modules, use ':::' as the
+        descriptor. (bool)
     :returns: a dict of 'kstat_name: value' pairs. All keys are
         lower-cased, and whitespace is replaced with underscores. If
         there are no matches, you get an empty dict. (dict)
@@ -173,17 +177,20 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False):
     assert isinstance(descriptor, basestring)
     assert isinstance(only_num, bool)
     assert isinstance(no_times, bool)
+    assert isinstance(terse, bool)
 
     d = kstat_req_parse(descriptor)
     ret ={}
 
-    if not d['module']: raise ValueError
-
-    ko = kstat.Kstat(d['module'])
+    if d['module']:
+        ko = kstat.Kstat(d['module'])
+    else:
+        ko = kstat.Kstat()
 
     for mod, inst, name, kclass, ks_type, ksp in ko._iterksp():
         if d['instance'] != None and inst != d['instance']: continue
         if d['name'] != None and name != d['name']: continue
+        if ks_class != None and kclass != ks_class: continue
         astat = ko[mod, inst, name]
 
         for k, v in astat.items():
