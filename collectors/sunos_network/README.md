@@ -1,23 +1,21 @@
 # Network Collector
 
-Uses the `kstat` interface to get NIC statistics. The raw
-`kstat` counter values are used: the collector itself *does not*
-compute rates or deltas. This should be done by your graphing
-software.
+Uses the `kstat` interface to get NIC statistics. The raw `kstat`
+counter values are used: the collector itself *does not* compute rates
+or deltas. This should be done by your graphing software.
 
 ## Options
 
-* **`zones`**: tells the collector which zones to get
-  statistics for. By default it will only do zone `0`, which is the
-  global. Zones are mapped by their ID, which you can see in the
-  output of `zoneadm list`. You can use the magic value `__all__` to
-  get output for all zones on the box. There's a minor overhead in
-  collecting zone information as `zoneadm` has to be run at the
-  start of every collection. By default the collector will get
-  statistics for the global zone only.
+* **`zones`**: This collector is zone-aware, and the `zones` parameter
+  tells it which tells which zones to look at.  By default it will
+  collect metrics for *all* visible zones.  There's a minor overhead in
+  collecting zone information as `zoneadm` has to be run at the start of
+  every collection. By default the collector will get statistics for the
+  global zone only.
 
 * **`nic`**: is a string or list of NICs to watch. Default is
-  `net0`.
+  `net0`. Regular expressions are allowed, and the same NIC list is
+  applied to every zone.
 
 * **`fields`**: is used to supply a filter list of fields
   which you are interested in.  A metric will only be published if
@@ -86,7 +84,7 @@ network.<zone>.<interface>.rbytes64
 ## Bugs and Caveats
 
 I don't currently have access to a multi-homed box, so using NICs
-other than `net0` is untested and possibly unsupported.
+other than `net0` is untested.
 
 I'd like to have this work for etherstubs and vswitches. We'll see
 how that goes once I get my hands on some hardware which supports
