@@ -7,14 +7,23 @@ software.
 
 ## Options
 
-* **`devices`**: a list of devices. Can be strings or regexes.
+* **`devices`**: a list of devices. Can be strings or regexes. By
+  default, anything which identifies as a `disk`, (by means of having
+  `disk` class kstats) will be included.
+
+  To see your disks, run
+
+  ```sh
+  $ iostat -er
+  ```
+
 * **`fields`**: a list of IO fields you want to collect. Refer to
   the [metric paths section](#metric-paths) below for a list of
   viable fields.
 
 ### Examples
 
-Collect all available statistics for all `cmdk` devices.
+Collect all available statistics for all `cmdk` (SATA) devices.
 
 
 ```
@@ -51,7 +60,3 @@ io.<disk>.reads     # number of read operations
 io.<disk>.wcnt      # count of elements in wait state
 io.<disk>.writes    # number of write operations
 ```
-
-The only pattern I've seen so far for `disk` is `cmdk[0-9]+`, but I
-suspect there are `did`s out there, and possibly others I've not
-thought of.

@@ -1,20 +1,20 @@
 import diamond.collector
-import sunos_helpers
+import sunos_helpers as sh
 
 class SunOSNFSServerCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(SunOSNFSServerCollector, self).get_default_config()
         config.update({
-            'nfs_vers': [3,4],
+            'fields':   '__all__',
             'path':     'nfs.server',
+            'nfs_vers': [3, 4],
             })
         return config
 
     def collect(self):
         for nfs_ver in self.config['nfs_vers']:
-            for k, v in sunos_helpers.kstat_name(
-                    'nfs:0:rfsproccnt_v%s' % nfs_ver).iteritems():
-                if (not 'fields' in self.config) or (k in
-                self.config['fields']):
-                  self.publish('v%s.%s' % (nfs_ver, k), v)
+            for k, v in sh.get_kstat('nfs:0:rfsproccnt_v%s' % nfs_ver,
+                    terse=True, no_times=True).iteritems():
+                if sh.wanted(k, self.config['fields']):
+                    self.publish('v%s.%s' % (nfs_ver, k), v)

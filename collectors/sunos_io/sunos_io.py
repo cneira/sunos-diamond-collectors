@@ -6,18 +6,18 @@ class SunOSIOCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(SunOSIOCollector, self).get_default_config()
         config.update({
-            'devices': '__all__',
+            'devices': 'cmdk0',
             'fields': '__all__',
             'path':     'io',
             })
         return config
 
     def kstats(self):
-        return sh.kstat_class('disk')
+        return sh.get_kstat(':::', ks_class='disk', no_times=True)
 
     def collect(self):
-        for disk, kstats in self.kstats().iteritems():
-            if sh.wanted(disk, self.config['devices']):
-                for k, v in kstats.items():
-                    if sh.wanted(k, self.config['fields']):
-                        self.publish('%s.%s' % (disk, k), v)
+        for k, v in self.kstats().items():
+            mod, inst, dev, name = k.split(':')
+            if (sh.wanted(dev, self.config['devices'], regex=True) and
+                    sh.wanted(name, self.config['fields'])):
+                self.publish('%s.%s' % (dev, name), v)

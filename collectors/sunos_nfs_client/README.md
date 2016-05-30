@@ -1,27 +1,32 @@
 # NFS Client Collector
 
-Uses the `kstat` interface to get NFS client statistics. The raw
-`kstat` counter values are used: the collector itself *does not*
-compute rates or deltas. This should be done by your graphing
-software.
+Uses the `kstat` interface to get NFS client statistics. The raw `kstat`
+counter values are used: the collector itself *does not* compute rates
+or deltas. This should be done by your graphing software.
 
 ## Options
 
-You can select the NFS client version(s) to collect through the
-`nfs_vers` option. It should be an array of integers from `2` to `4`
-inclusive.
+* **`nfs_vers`** : You can select the NFS client version(s) to collect
+  through the `nfs_vers` option. It should be an array of integers, and
+  currently valid values are `2` to `4` inclusive.
 
-You can use the `fields` variable to supply a filter list of fields
-which you are interested in.  A metric will only be published if its
-name is an element of that array.
+* **`fields`**: In addition to Diamonds `metrics_whitelist` and
+  `metrics_blacklist` configuration, you can use the `fields` variable
+  to supply a filter list of fields which you are interested in.  A
+  metric will only be published if its name is an element of that array.
 
-By default all available metrics are collected for NFSv3 and NFSv4,
-whilst NFSv2 is disregarded.
+  By default all available metrics are collected for NFSv3 and NFSv4,
+  hilst NFSv2 is disregarded.
+
+To black/whitelist metrics, you must supply the version. For instance:
+
+```
+metrics_whitelist: v4.read
+```
 
 ### Examples
 
 Collect `read`, `write` and `remove` statistics for NFS v3 and v4.
-
 
 ```
 [[ SunOSNFSClientCollector ]]
@@ -38,7 +43,17 @@ enabled = True
 nfs_vers = 4
 ```
 
+## Bugs and Caveats
+
+The kstat values are reported "raw": that is `crtime` and `snaptime` are
+not used to calculate differentials. Your graphing software should
+calculate rates, but they will not be as accurate as if they were
+calculated from the high-resolution kstat times.
+
 ## Metric Paths
+
+The following metrics are available in Solaris 11.3. YMMV depending on
+your distribution and release.
 
 ```
 nfs.client.v2.create
