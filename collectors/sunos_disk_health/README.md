@@ -21,7 +21,6 @@ compute rates or deltas.
   ```sh
   $ iostat -er
   ```
-
 * **`fields`**: In addition to Diamonds `metrics_whitelist` and
   `metrics_blacklist` configuration, you can use the `fields` variable
   to supply a filter list of fields which you are interested in.  A
@@ -30,6 +29,13 @@ compute rates or deltas.
   By default the collector looks for `hard_errors`, `soft_errors`,
   `transport_errors`, `device_not_ready` and `illegal_request`. You
   almost certainly don't want to look at `size`.
+* **`sn_tag`**: If you are using a backend and a handler which supports
+  points tags. (like Wavefront), you can choose to have the points
+  tagged with information which makes the disks more easily
+  identifiable. The collector will look for kstats which hold the disk's
+  serial number, model, and manufacturer. If any or all of these are
+  found, they are used as point tags. To disable, set this parameter to
+  `False`. (bool)
 
 To black/whitelist metrics, you must supply the device. For instance:
 
