@@ -34,11 +34,11 @@ class ZFSArcCollector(diamond.collector.Collector):
         return config
 
     def kstats(self, group):
-        return sh.get_kstat('zfs:0:%s' % group, terse=True, no_times=True)
+        return sh.get_kstat('zfs:0:%s' % group, terse=True,
+                no_times=True, statlist=self.config[group])
 
     def collect(self):
         for group in ('arcstats', 'vdev_cache_stats', 'zfetchstats'):
             if self.config[group]:
                 for k, v in self.kstats(group).items():
-                    if sh.wanted(k, self.config[group]):
-                        self.publish('.'.join([group, k]), v)
+                    self.publish('.'.join([group, k]), v)

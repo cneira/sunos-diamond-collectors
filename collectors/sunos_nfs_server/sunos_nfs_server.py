@@ -12,9 +12,11 @@ class SunOSNFSServerCollector(diamond.collector.Collector):
             })
         return config
 
+    def kstats(self, nfs_ver):
+        return sh.get_kstat('nfs:0:rfsproccnt_v%s' % nfs_ver, terse=True,
+                no_times=True, statlist=self.config['fields'])
+
     def collect(self):
         for nfs_ver in self.config['nfs_vers']:
-            for k, v in sh.get_kstat('nfs:0:rfsproccnt_v%s' % nfs_ver,
-                    terse=True, no_times=True).iteritems():
-                if sh.wanted(k, self.config['fields']):
-                    self.publish('v%s.%s' % (nfs_ver, k), v)
+            for k, v in self.kstats(nfs_ver).items():
+                self.publish('v%s.%s' % (nfs_ver, k), v)

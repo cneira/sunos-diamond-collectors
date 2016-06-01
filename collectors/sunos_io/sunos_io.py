@@ -13,11 +13,11 @@ class SunOSIOCollector(diamond.collector.Collector):
         return config
 
     def kstats(self):
-        return sh.get_kstat(':::', ks_class='disk', no_times=True)
+        return sh.get_kstat(':::', ks_class='disk', no_times=True,
+                statlist=self.config['fields'])
 
     def collect(self):
         for k, v in self.kstats().items():
             mod, inst, dev, name = k.split(':')
-            if (sh.wanted(dev, self.config['devices'], regex=True) and
-                    sh.wanted(name, self.config['fields'])):
+            if (sh.wanted(dev, self.config['devices'], regex=True)):
                 self.publish('%s.%s' % (dev, name), v)
