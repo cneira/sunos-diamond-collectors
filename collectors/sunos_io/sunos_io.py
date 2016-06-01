@@ -6,7 +6,7 @@ class SunOSIOCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(SunOSIOCollector, self).get_default_config()
         config.update({
-            'devices': 'cmdk0',
+            'devices': '__all__',
             'fields': '__all__',
             'path':     'io',
             })

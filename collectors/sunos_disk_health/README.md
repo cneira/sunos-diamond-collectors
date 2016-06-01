@@ -9,19 +9,18 @@ compute rates or deltas.
 
 ## Options
 
-* **`modules`**: I don't know what disks you have in your system. The
-  Solaris 11 box I am working on right now has SATA disks accessed
-  through the `cmdk` driver. My JPC zones have SAS drives, so use the
-  `sd` driver. By default the collector looks for both these types using
-  the `cmdkerror` and `sderr` kstat modules respectively. If you have
-  something else, you can query it by adding to this variable.
+* **`devices`**: a list of devices. Can be strings or regexes. By
+  default, anything which identifies as a `disk`, (by means of having
+  `disk` class kstats) will be included.
 
-  You can find out what your disks call themselves by running
+  To see your disks, run
 
   ```sh
   $ iostat -er
   ```
 
+  By default, uses the magic value `__all__`, which collects information
+  for anything identifying with the `device_error` kstat class.
 * **`fields`**: In addition to Diamonds `metrics_whitelist` and
   `metrics_blacklist` configuration, you can use the `fields` variable
   to supply a filter list of fields which you are interested in.  A
@@ -30,6 +29,13 @@ compute rates or deltas.
   By default the collector looks for `hard_errors`, `soft_errors`,
   `transport_errors`, `device_not_ready` and `illegal_request`. You
   almost certainly don't want to look at `size`.
+* **`sn_tag`**: If you are using a backend and a handler which supports
+  points tags. (like Wavefront), you can choose to have the points
+  tagged with information which makes the disks more easily
+  identifiable. The collector will look for kstats which hold the disk's
+  serial number, model, and manufacturer. If any or all of these are
+  found, they are used as point tags. To disable, set this parameter to
+  `False`. (bool)
 
 To black/whitelist metrics, you must supply the device. For instance:
 
@@ -39,13 +45,26 @@ metrics_whitelist: cmdk0.hard_errors
 
 ### Examples
 
-Collect all disk error information for all SATA devices.
+Collect all disk error information for all SATA devices, but disabling
+point tags.
 
 ```
 [[ SunOSDiskHealthCollector ]]
 enabled = True
-modules = cmdkerror
+devices = __all__
+sn_tag = False
 ```
+
+Collect hard and soft errors for SAS disks, tagging them with their serial
+numbers.
+
+```
+[[ SunOSDiskHealthCollector ]]
+enabled = True
+devices = sd[0-9]+
+fields = hard_errors,soft_errors
+```
+
 
 ## Metric Paths
 

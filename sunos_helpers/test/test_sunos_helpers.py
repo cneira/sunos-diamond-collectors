@@ -106,9 +106,6 @@ class TestSunOSHelpers(unittest.TestCase):
                 'statistic': None })
 
     def test_get_kstat(self):
-        #with self.assertRaises(ValueError):
-            #sh.get_kstat(':3:nfs_server:calls')
-
         self.assertEqual(sh.get_kstat('nosuch:0:kstat:name'), {})
         self.assertEqual(sh.get_kstat('nosuch:0::name'), {})
         self.assertEqual(sh.get_kstat('nosuch:::name'), {})
@@ -159,6 +156,18 @@ class TestSunOSHelpers(unittest.TestCase):
 
         self.assertNotIn('ilb:0:global:snaptime', sh.get_kstat(':::',
             ks_class='kstat', no_times=True))
+
+        self.assertEqual(sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
+                statlist=['nosuch']), {})
+
+        res = sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
+                terse=True, statlist=('state', 'core_id'))
+
+        self.assertEqual(len(res), 2)
+        self.assertItemsEqual(res.keys(), ['state', 'core_id'])
+
+        self.assertIn('core_id', sh.get_kstat('cpu_info:0:cpu_info0',
+            statlist='__all__', terse=True))
 
 if __name__ == '__main__':
     unittest.main()
