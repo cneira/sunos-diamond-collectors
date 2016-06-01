@@ -199,7 +199,7 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
 
         for k, v in astat.items():
             if d['statistic'] != None and k != d['statistic']: continue
-            if statlist != None and statlist != '__all__' and \
+            if statlist != None and statlist != ['__all__'] and \
                     k not in statlist: continue
             if k == 'snaptime' or k == 'crtime':
                 if no_times: continue
