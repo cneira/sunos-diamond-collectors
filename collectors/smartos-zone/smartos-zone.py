@@ -36,7 +36,7 @@ class SmartOSZoneCollector(diamond.collector.Collector):
         for kstat in ('swapresv', 'lockedmem', 'nprocs', 'cpucaps',
                       'physicalmem', 'memcap'):
             for k, v in sh.get_kstat('caps:%d:%s_zone_%d' % (zid,
-                kstat, zid), no_times=False).items():
+                kstat, zid), no_times=False, terse=True).items():
                 if k == 'snaptime': continue
                 if k == 'value' and v > maxint * 2: continue
                 self.publish('%s.%s' % (kstat, k), v)
