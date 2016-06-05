@@ -169,6 +169,9 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     :param ks_class: Allows you to filter on kstat class. To retrieve
         stats for a given class across all modules, use ':::' as the
         descriptor. (bool)
+    :param statlist: Returns only the kstats named in this list. If it
+        is not a string, it is converted to a list to avoid substring
+        matching. (string, list)
     :returns: a dict of 'kstat_name: value' pairs. All keys are
         lower-cased, and whitespace is replaced with underscores. If
         there are no matches, you get an empty dict. (dict)
@@ -178,6 +181,7 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     assert isinstance(only_num, bool)
     assert isinstance(no_times, bool)
     assert isinstance(terse, bool)
+    if isinstance(statlist, basestring): statlist = [statlist]
 
     d = kstat_req_parse(descriptor)
     ret ={}
@@ -195,7 +199,7 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
 
         for k, v in astat.items():
             if d['statistic'] != None and k != d['statistic']: continue
-            if statlist != None and statlist != '__all__' and \
+            if statlist != None and statlist != ['__all__'] and \
                     k not in statlist: continue
             if k == 'snaptime' or k == 'crtime':
                 if no_times: continue

@@ -75,7 +75,8 @@ class SunOSNetworkCollector(diamond.collector.Collector):
 
     def kstats(self, zone_id, nic):
         return sh.get_kstat('link:%s:%s' % (zone_id, nic),
-                no_times=True, terse=True)
+                no_times=True, terse=True,
+                statlist=self.config['fields'])
 
     def nic_map(self):
         """
@@ -116,5 +117,4 @@ class SunOSNetworkCollector(diamond.collector.Collector):
             if (sh.wanted(nic_name, self.config['nics'], regex=True) and
                     nic_id in zm.keys()):
                 for k, v in self.kstats(nic_id, nic_name).items():
-                    if sh.wanted(k, self.config['fields']):
-                      self.publish('%s.%s.%s' % (zm[nic_id], nic_name, k), v)
+                    self.publish('%s.%s.%s' % (zm[nic_id], nic_name, k), v)
