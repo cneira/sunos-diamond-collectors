@@ -51,7 +51,7 @@ class SunOSNetworkCollector(diamond.collector.Collector):
         for z in zoneadm:
             chunks = z.split(':')
 
-            if len(chunks) != 10:
+            if len(chunks) < 8:
                 raise NotImplementedError(
                 'cannot parse zoneadm output: %d fields in %s' %
                 (len(chunks), zoneadm))
@@ -111,7 +111,6 @@ class SunOSNetworkCollector(diamond.collector.Collector):
             self.last_values['nic_map'] = nic_map
 
         zm = self.zone_map(self.zoneadm(), self.config['zones'])
-        self.log.debug(zm)
 
         for nic_id, nic_name in nic_map:
             if (sh.wanted(nic_name, self.config['nics'], regex=True) and
