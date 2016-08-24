@@ -25,7 +25,10 @@ class ZonesCollector(diamond.collector.Collector):
         return config
 
     def zoneadm(self):
-        return sunos_helpers.run_cmd('/usr/sbin/zoneadm list -pc')
+        zones = sunos_helpers.run_cmd('/usr/sbin/zoneadm list -pc')
+        if isinstance(zones, basestring):
+            zones = [zones]
+        return zones
 
     def collect(self):
         zones = [z.split(':')[2] for z in self.zoneadm()]
