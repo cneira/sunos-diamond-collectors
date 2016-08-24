@@ -23,6 +23,6 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         return pagesize
 
     def collect(self):
-
-        kpg = sunos_helpers.kstat_val('unix:0:system_pages:pp_kernel')
-        self.publish('kernel', int(pagesize) * int(kpg))
+        kstat = 'unix:0:system_pages:pp_kernel'
+        kpg = sh.get_kstat(kstat)[kstat]
+        self.publish('kernel', int(self.pagesize()) * int(kpg))
