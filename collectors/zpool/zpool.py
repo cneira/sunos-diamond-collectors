@@ -54,35 +54,44 @@ class ZpoolCollector(diamond.collector.Collector):
         # 3 : UNAVAIL
         # 4 : <cannot parse>
         #
-        healths = ['ONLINE', 'DEGRADED', 'SUSPENDED', 'UNAVAIL']
+        states = ['ONLINE', 'DEGRADED', 'SUSPENDED', 'UNAVAIL']
 
         try:
-            return healths.index(health)
+            return states.index(health)
         except ValueError:
             return 4
 
     def zpool(self):
-        return sh.run_cmd('/usr/sbin/zpool list -H')
+        #
+        # SmartOS and Solaris do not return the same fields for
+        # zpool information. Rather than hardcode each and hope
+        # neither changes, let's look at the header and use that to
+        # build up a dict for each pool. Put those in a dict with
+        # the zone name as the key.
+        #
+        raw = sh.run_cmd('/usr/sbin/zpool list')
+        ret = {}
+
+        headers = raw.pop(0).lower().split()
+        pools = [pool.split() for pool in raw]
+
+        for pool in pools:
+            ret[pool[0]] = dict(zip(headers, pool))
+
+        return ret
 
     def collect(self):
-        for p in self.zpool():
-            (name, size, alloc, free, cap, dedup, health,
-                    altroot) = p.split();
+        pools = self.zpool()
 
-            if sh.wanted('size', self.config['fields']):
-                self.publish('%s.size' % name, sh.bytify(alloc))
+        for pool, data in pools.items():
+            for k, v in data.items():
 
-            if sh.wanted('alloc', self.config['fields']):
-                self.publish('%s.alloc' % name, sh.bytify(alloc))
+                if not sh.wanted(k, self.config['fields']):
+                    continue
 
-            if sh.wanted('free', self.config['fields']):
-                self.publish('%s.free' % name, sh.bytify(free))
-
-            if sh.wanted('cap', self.config['fields']):
-                self.publish('%s.cap' % name, float(cap[:-1]))
-
-            if sh.wanted('dedup', self.config['fields']):
-                self.publish('%s.dedup' % name, float(dedup[:-1]))
-
-            if sh.wanted('health', self.config['fields']):
-                self.publish('%s.health' % name, self.health_as_int(health))
+                if k in ('size', 'alloc', 'free', 'expandsz'):
+                    self.publish('%s.%s' % (pool, k), sh.bytify(v))
+                elif v.endswith('%') or v.endswith('x'):
+                    self.publish('%s.%s' % (pool, k), float(v[:-1]))
+                elif k == 'health':
+                    self.publish('%s.health' % pool, self.health_as_int(v))
