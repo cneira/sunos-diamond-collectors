@@ -124,6 +124,9 @@ def bytify(size, use_thousands = False):
 
     multiplier = 1000 if use_thousands else 1024
 
+    if size == '-':
+        return 0
+
     try:
         chunks = re.match("^(-?[\d\.]+)(\w)$", size)
         exponent = sizes.index(chunks.group(2))
