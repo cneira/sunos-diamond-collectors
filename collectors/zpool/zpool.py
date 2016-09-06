@@ -16,8 +16,8 @@ By default sends the allocated data in the pool (b), free space (b)
 capacity (%) and the pool's health. Override with the 'fields'
 setting in your config.
 
-Only tested on Solaris. May work with bedroom hobbyist operating
-systems.
+Only tested on Solaris and SmartOS. May work with bedroom hobbyist
+operating systems.
 
 #### Dependencies
 

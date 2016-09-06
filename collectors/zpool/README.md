@@ -4,6 +4,10 @@ Uses the `zpool` CLI to report on the state of ZFS pools. Written
 and tested on Solaris, but will likely work on FreeBSD and, if you
 must, Linux.
 
+It tries to be flexible with the columns in the `zpool` output, so
+new fields being added ought not to break things, though they won't
+necessarily be displayed without amending the collector.
+
 ## Options
 
 * **`fields`**: a list of metrics you wish to collect. For all
@@ -19,16 +23,28 @@ around 15ms.
 By default it reports all the columns in the default `zpool` output.
 Namely:
 
-`zpool.<pool>.size` (bytes)
 `zpool.<pool>.alloc` (bytes)
-`zpool.<pool>.free` (bytes)
 `zpool.<pool>.cap` (float)
 `zpool.<pool>.dedup` (float)
+`zpool.<pool>.free` (bytes)
+`zpool.<pool>.size` (bytes)
+
+on Solaris 11.3, and
+
+`zpool.<pool>.alloc` (bytes)
+`zpool.<pool>.cap` (bytes)
+`zpool.<pool>.dedup` (float)
+`zpool.<pool>.expandsz` (bytes)
+`zpool.<pool>.frag` (float)
+`zpool.<pool>.free` (bytes)
+`zpool.<pool>.size` (float)
+
+on SmartOS 20160901.
 
 You can choose any subset of these via the `fields` configuration
-setting.
+setting, or use standard Diamond whitelist/blacklisting.
 
-Additionally, the health of the pool is reported, as an integer.
+Additionally, the health of the pool can be reported as an integer.
 
 `zpool.<pool>.health` (int)
 
