@@ -16,8 +16,8 @@ service states in all zones. The only way to do this on Solaris is
 with some kind of 'zlogin' approach which, for now, I have decided
 not to take.
 
-If the 'zones' parameter is truthy, then the zone name goes in the
-metric path. If False, it doesn't.
+When Diamond runs in the global zone, NGZ statistics appear under
+'smf.svcs.ngz.<zone_name>'.
 
 #### Dependencies
 
@@ -34,7 +34,7 @@ offline, or in maintenance state.
 """
 
 import diamond.collector
-import sunos_helpers
+import sunos_helpers as sh
 
 class SmfSvcCollector(diamond.collector.Collector):
 
@@ -76,9 +76,9 @@ class SmfSvcCollector(diamond.collector.Collector):
 
     def svcs(self):
         try:
-            ret = sunos_helpers.run_cmd('/bin/svcs -ZaHo zone,state')
+            ret = sh.run_cmd('/bin/svcs -ZaHo zone,state')
         except:
-            ret = sunos_helpers.run_cmd('/bin/svcs -aHo state')
+            ret = sh.run_cmd('/bin/svcs -aHo state')
 
         return ret
 
@@ -86,11 +86,15 @@ class SmfSvcCollector(diamond.collector.Collector):
         svcs = self.process_data(self.svcs())
 
         for zone, data in svcs.items():
+            if not sh.wanted(zone, self.config['zones']):
+                continue
+
             if zone == '__local__' or zone == 'global':
                 prefix = ''
             else:
                 prefix = 'ngz.%s.' % zone
 
             for state, count in data.items():
-                self.publish(prefix + state, count)
+                if sh.wanted(state, self.config['states']):
+                    self.publish(prefix + state, count)
 
