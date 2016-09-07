@@ -4,10 +4,20 @@
 SMF Service Collector
 
 Uses the system 'svcs' command to count how many services are in
-each possible state.
+each possible state. This is intended for simple alerting off failed
+services. I can't see why you'd ever want to know how many states
+are in 'legacy_run' or 'disabled', but the option is there if you
+want it. Indeed, by default all possible service states are
+reported, but the user can choose their own with the 'states'
+option.
 
-By default all possible service states are reported, but the user
-can choose their own with the 'states' option.
+Illomos' 'svcs' is zone-aware. From the global, you can query the
+service states in all zones. The only way to do this on Solaris is
+with some kind of 'zlogin' approach which, for now, I have decided
+not to take.
+
+If the 'zones' parameter is truthy, then the zone name goes in the
+metric path. If False, it doesn't.
 
 #### Dependencies
 
@@ -31,6 +41,7 @@ class SmfSvcCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(SmfSvcCollector, self).get_default_config()
         config.update({
+            'zones':  '__all__',
             'path':   'smf.svcs',
             'states': ['online', 'offline', 'uninitialized',
                        'degraded', 'maintenance', 'legacy_run',
@@ -38,11 +49,48 @@ class SmfSvcCollector(diamond.collector.Collector):
             })
         return config
 
-    def svcs(self):
-        return sunos_helpers.run_cmd('/bin/svcs -aHo state')
+    def process_zone(self, data):
+        # return a hash of counts for each service state
 
-    def collect(self):
-        svcs = self.svcs()
+        ret = {}
 
         for state in self.config['states']:
-            self.publish(state, svcs.count(state))
+            self.log.debug(state)
+            ret[state] = data.count(state)
+
+        return ret
+
+    def process_data(self, data):
+        ret = {}
+
+        if len(data[0].split()) == 2:
+            for z in set([l.split()[0] for l in data]):
+                zd = [l.split()[1] for l in data if l.split()[0] == z]
+                ret[z] = self.process_zone(zd)
+        elif len(data[0].split()) == 1:
+            ret['__local__'] = self.process_zone(data)
+        else:
+            raise 'cannot parse svcs output'
+
+        return ret
+
+    def svcs(self):
+        try:
+            ret = sunos_helpers.run_cmd('/bin/svcs -ZaHo zone,state')
+        except:
+            ret = sunos_helpers.run_cmd('/bin/svcs -aHo state')
+
+        return ret
+
+    def collect(self):
+        svcs = self.process_data(self.svcs())
+
+        for zone, data in svcs.items():
+            if zone == '__local__' or zone == 'global':
+                prefix = ''
+            else:
+                prefix = 'ngz.%s.' % zone
+
+            for state, count in data.items():
+                self.publish(prefix + state, count)
+
