@@ -9,8 +9,10 @@ unprocessed, but 'nsec' times can be sent as rates, and %ages can be
 derived from these.
 
 Other things may change to rates. This is work in progress.
-"""
 
+This collector only works on "global" CPU usage. If you want
+per-zone statistics, look at the 'zone_usage' collector.
+"""
 
 class SunOSCPUCollector(diamond.collector.Collector):
 
@@ -67,6 +69,7 @@ class SunOSCPUCollector(diamond.collector.Collector):
         if cpu_id not in self.last_values['cpu'].keys():
             self.last_values['cpu'][cpu_id] = {}
 
+
         try:
             st_delta = st - self.last_values['cpu'][cpu_id]['st']
         except:
@@ -99,7 +102,7 @@ class SunOSCPUCollector(diamond.collector.Collector):
                     pc_in_state = delta / float(st_delta) * 100
                     self.publish('%d.%s' % (cpu_id, pc_metric_name),
                         pc_in_state, precision=3)
-            except Exception as e:
+            except:
                 self.log.debug('cannot calculate %s delta' % m)
 
             self.last_values['cpu'][cpu_id][m] = data[m]
