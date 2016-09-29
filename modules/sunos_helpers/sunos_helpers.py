@@ -166,7 +166,7 @@ def kstat_req_parse(descriptor):
     return ret
 
 def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
-        ks_class = None, statlist=None):
+        ks_class = None, statlist=None, single_val=False):
     """
     A general-purpose kstat accessor.
 
@@ -190,6 +190,8 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     :param statlist: Returns only the kstats named in this list. If it
         is not a string, it is converted to a list to avoid substring
         matching. (string, list)
+    :param single_val Returns the first value it finds for the given
+        kstat. Use with care: be very specific.
     :returns: a dict of 'kstat_name: value' pairs. All keys are
         lower-cased, and whitespace is replaced with underscores. If
         there are no matches, you get an empty dict. (dict)
@@ -228,11 +230,15 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
                 except:
                     continue
 
+            if single_val: return v
             k = k.lower().replace(' ', '_')
             if not terse: k = '%s:%d:%s:%s' % (mod, inst, name, k)
             ret[k] = v
 
     return ret
+
+#-------------------------------------------------------------------------
+# MISCELLANY
 
 def zone_map(zoneadm, passthru = '__all__'):
     """

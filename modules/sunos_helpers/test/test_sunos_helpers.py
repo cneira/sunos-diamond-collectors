@@ -113,6 +113,9 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.get_kstat('nosuch:0'), {})
         self.assertEqual(sh.get_kstat('nosuch'), {})
 
+        self.assertIsInstance(sh.get_kstat('cpu:0:sys:canch',
+            single_val=True), long)
+
         self.assertEqual(len(sh.get_kstat('cpu::vm:pgin')),
             len(sh.run_cmd('/usr/sbin/psrinfo')))
         self.assertEqual(len(sh.get_kstat('cpu:0:vm:pgin')), 1)
