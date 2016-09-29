@@ -1,0 +1,41 @@
+
+
+    def kstat_dict(self, data, index, last_val = False):
+        """
+        Turn a dict of zone kstats into a nested, more easily
+        parseable dict.
+
+        :param data: dict of kstat name => value, as returned by the
+          sunos_helpers::get_kstat() method
+        :param index: the part of the kstat name which will be used
+          as the key of the top-level dict
+        :returns: a dict where the key is the part 'index' of the
+          kstat name, and the value is a dict of terse kstat name =>
+          value
+        """
+
+        ret = {}
+
+        for z in set([t.split(':')[index] for t in data]):
+            ret[z] = { k.split(':')[-1]: data[k] for k in data if
+                    k.split(':')[index] == z }
+
+        return ret
+
+    def collect
+
+
+        # The following only works on Illumos. The kstat does not
+        # exist on Solaris
+
+        zk = self.kstat_dict(sh.get_kstat('zones', only_num=True), 2)
+
+        for zone, stats in zk.items():
+            if not sh.wanted(zone, self.config['zones']):
+                continue
+
+            for k, v in stats.items():
+
+                if sh.wanted(k, self.config['fields']):
+                    self.publish('zone.%s.%s' % (zone, k), v)
+

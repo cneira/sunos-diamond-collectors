@@ -50,6 +50,21 @@ def run_cmd(cmd_str, pfexec=False):
     else:
         raise Exception('error: %s' %err)
 
+def zoneadm():
+    """
+    Get a list of visible zones. This needs to always be an array,
+    even if there's only one.
+
+    :returns: output of zoneadm command, one zone per line.
+    """
+
+    ret = run_cmd('/usr/sbin/zoneadm list -pc')
+
+    if isinstance(ret, basestring):
+        return [ret]
+    else:
+        return ret
+
 #-------------------------------------------------------------------------
 # Miscellany
 
@@ -109,6 +124,9 @@ def bytify(size, use_thousands = False):
 
     multiplier = 1000 if use_thousands else 1024
 
+    if size == '-':
+        return 0
+
     try:
         chunks = re.match("^(-?[\d\.]+)(\w)$", size)
         exponent = sizes.index(chunks.group(2))
@@ -148,7 +166,7 @@ def kstat_req_parse(descriptor):
     return ret
 
 def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
-        ks_class = None, statlist=None):
+        ks_class = None, statlist=None, single_val=False):
     """
     A general-purpose kstat accessor.
 
@@ -172,6 +190,8 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     :param statlist: Returns only the kstats named in this list. If it
         is not a string, it is converted to a list to avoid substring
         matching. (string, list)
+    :param single_val Returns the first value it finds for the given
+        kstat. Use with care: be very specific.
     :returns: a dict of 'kstat_name: value' pairs. All keys are
         lower-cased, and whitespace is replaced with underscores. If
         there are no matches, you get an empty dict. (dict)
@@ -210,8 +230,54 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
                 except:
                     continue
 
+            if single_val: return v
             k = k.lower().replace(' ', '_')
             if not terse: k = '%s:%d:%s:%s' % (mod, inst, name, k)
             ret[k] = v
+
+    return ret
+
+#-------------------------------------------------------------------------
+# MISCELLANY
+
+def zone_map(zoneadm, passthru = '__all__'):
+    """
+    Return a map of zone ID to zone name. Can't be cached because
+    zones could be rebooted and get a different ID mid-flight. This
+    would be a problem if you were running from the global.
+
+    :param zoneadm: the output of a `zoneadm list -pc` command.
+        (string)
+    :param passthru: a list of zones you want: everything else will
+        be discarded. If there's no passthru, you get everything.
+        Non-running zones are ignored. (string or list)
+    :raises: NotImplementedError if it can't parse the zoneadm arg.
+    :return: map of { zone_id: zone name}. (dict)
+    """
+
+    ret = {}
+
+    for z in zoneadm:
+        chunks = z.split(':')
+
+        if len(chunks) < 8:
+            raise NotImplementedError(
+            'cannot parse zoneadm output: %d fields in %s' %
+            (len(chunks), zoneadm))
+
+        if chunks[0] == '-':
+            continue
+
+        if passthru == '__all__' or chunks[1] in passthru:
+            ret[chunks[0]] = chunks[1]
+
+    """
+    Here's a cheat: if we're in an NGZ, we don't actually care about
+    the zone ID. In fact, kstat `link` instances *don't* match to
+    zone ID in NGZs. So, we fudge the key.
+    """
+
+    if len(zoneadm) == 1 and ret.keys()[0] != 'global':
+        ret = { '0': ret.values()[0] }
 
     return ret

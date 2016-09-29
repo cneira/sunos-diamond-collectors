@@ -1,0 +1,47 @@
+#!/bin/ksh
+#
+# An SMF method to start and stop the Diamond metric collector with
+# custom SunOS (i.e. Solaris and Illumos) collectors.
+#
+
+BASE=/opt/diamond
+CONF=/config/diamond/diamond.conf
+PATH=/bin
+PIDFILE=/tmp/diamond.pid
+
+. /lib/svc/share/smf_include.sh
+
+export PYTHONPATH=/opt/diamond/share/sunos-diamond-collectors/modules
+
+start_service()
+{
+    ${BASE}/bin/diamond -p $PIDFILE -c $CONF
+}
+
+stop_service()
+{
+    ctid=$(svcprop -p restarter/contract $SMF_FMRI)
+    test -f $PIDFILE && rm $PIDFILE
+
+    for sig in 2 5 9
+    do
+        pgrep -c $ctid && smf_kill_contract $ctid $sig 1 2
+    done
+}
+
+case $1 in
+    start)  start_service
+            ;;
+
+    stop)   stop_service
+            ;;
+
+    restart)
+            stop_service
+            sleep 1
+            start_service
+            ;;
+
+        *)  print "usage; ${0##*/} stop|start|restart"
+            exit 1
+esac
