@@ -69,7 +69,6 @@ class SunOSCPUCollector(diamond.collector.Collector):
         if cpu_id not in self.last_values['cpu'].keys():
             self.last_values['cpu'][cpu_id] = {}
 
-
         try:
             st_delta = st - self.last_values['cpu'][cpu_id]['st']
         except:
