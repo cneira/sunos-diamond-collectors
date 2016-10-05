@@ -7,13 +7,13 @@ class SunOSMemoryCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(SunOSMemoryCollector, self).get_default_config()
         config.update({
+            'path':            'memory',
             'vminfo_fields':   '__all__',
             'swap_fields':     '__all__',
             'swapping_fields': '__all__',
             'paging_fields':   '__all__',
-            'path':            'memory',
-            'per_cpu_swapping': True,
-            'per_cpu_paging':   True,
+            'per_cpu_swapping': False,
+            'per_cpu_paging':   False,
             })
         return config
 
@@ -78,14 +78,13 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         """
 
         sums = {}
-
         fields = self.config['%s_fields' % prefix]
 
         for k, v in { k:v for (k,v) in ks.items() if k.endswith('%sin' %
             ptn) or k.endswith('%sout' % ptn) }.items():
             c = k.split(':')
 
-            if self.config['per_cpu_%s' % prefix] and sh.wanted(k,
+            if self.config['per_cpu_%s' % prefix] == True and sh.wanted(k,
                     fields):
                 self.publish('%s.cpu.%s.%s' % (prefix, c[1], c[3]), v)
             else:
