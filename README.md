@@ -1,4 +1,5 @@
-# SunOS Diamond Collectors
+# SunOS Diamond Collectors [![Code
+# Climate](https://codeclimate.com/github/snltd/sunos-diamond-collectors/badges/gpa.svg)](https://codeclimate.com/github/snltd/sunos-diamond-collectors)
 
 Additional SunOS- (i.e. Solaris- and Illumos-) specific collectors
 for [the Diamond metrics collection
