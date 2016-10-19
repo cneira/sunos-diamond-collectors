@@ -21,6 +21,7 @@ supply a comma-separated list of the kstat names you want via the
 import diamond.collector
 import sunos_helpers as sh
 
+
 class ZFSArcCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -35,7 +36,7 @@ class ZFSArcCollector(diamond.collector.Collector):
 
     def kstats(self, group):
         return sh.get_kstat('zfs:0:%s' % group, terse=True,
-                no_times=True, statlist=self.config[group])
+                            no_times=True, statlist=self.config[group])
 
     def collect(self):
         for group in ('arcstats', 'vdev_cache_stats', 'zfetchstats'):

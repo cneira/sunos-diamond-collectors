@@ -5,8 +5,7 @@
 
 from os import path
 import sys
+from sunos_helpers import *
 
 kstat_dir = '/'.join(path.realpath(__file__).split('/')[0:-2])
 sys.path.append(kstat_dir + '/kstat')
-
-from sunos_helpers import *

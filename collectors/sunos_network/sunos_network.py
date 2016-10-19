@@ -1,25 +1,24 @@
 import diamond.collector
 import sunos_helpers as sh
 
+
 class SunOSNetworkCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(SunOSNetworkCollector, self).get_default_config()
-        config.update({
-            'nics':   ['net0'],
-            'fields': ['obytes64', 'rbytes64', 'collisions',
-                       'brdcstrcv', 'brdcstxmt', 'ierrors',
-                       'oerrors', 'multircv', 'multixmit'
-                      ],
-            'path':   'network',
-            'zones':  '__all__',
-            })
+        config.update({'nics':   ['net0'],
+                       'fields': ['obytes64', 'rbytes64', 'collisions',
+                                  'brdcstrcv', 'brdcstxmt', 'ierrors',
+                                  'oerrors', 'multircv', 'multixmit'],
+                       'path':   'network',
+                       'zones':  '__all__'}
+                      )
         return config
 
     def kstats(self, zone_id, nic):
         return sh.get_kstat('link:%s:%s' % (zone_id, nic),
-                no_times=True, terse=True,
-                statlist=self.config['fields'])
+                            no_times=True, terse=True,
+                            statlist=self.config['fields'])
 
     def nic_map(self):
         """
@@ -32,7 +31,7 @@ class SunOSNetworkCollector(diamond.collector.Collector):
         """
 
         return [y.split(':')[1:-1] for y in sh.get_kstat('link:::rbytes',
-            ks_class='net', no_times=True).keys()]
+                ks_class='net', no_times=True).keys()]
 
     def collect(self):
         """
