@@ -62,3 +62,10 @@ To run the tests use the top-level `test.py` script. This is copied
 from the Diamond repo, and hacked about until it worked. Because of
 the strong dependency on the `kstat` module, the tests will only
 work on a Solarish system.
+
+To get the FMA tests to work, you will have to grant the user
+running the tests the `System Telemetry` profile, as explained in
+the [FMA collector README](collectors/fma/README.md).
+
+You will need the [mock](https://pypi.python.org/pypi/mock) and
+[PyYAML](http://pyyaml.org/wiki/PyYAML) modules to run the tests.

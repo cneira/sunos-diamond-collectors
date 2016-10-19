@@ -17,6 +17,9 @@ then
 elif [[ -f /opt/local/diamond/bin/diamond ]]
 then
     DIAMOND=/opt/local/diamond/bin/diamond
+elif [[ -f /bin/diamond ]]
+then
+    DIAMOND=/bin/diamond
 else
     print -u2 "ERROR: can't find a Python diamond install"
     exit 1

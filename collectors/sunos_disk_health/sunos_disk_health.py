@@ -9,8 +9,14 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
         config = super(SunOSDiskHealthCollector, self).get_default_config()
         config.update({
             'devices':   '__all__',
-            'fields':    ['hard_errors', 'soft_errors' 'transport_errors',
-                          'device_not_ready', 'illegal_request',
+            'fields':    ['hard_errors',
+                          'soft_errors',
+                          'transport_errors',
+                          'device_not_ready',
+                          'illegal_request',
+                          'media_error',
+                          'no_device',
+                          'non-aligned_writes',
                           'predictive_failure_analysis'],
             'path':       'disk.error',
             'sn_tag':    True,
