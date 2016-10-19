@@ -14,11 +14,13 @@ Create a new `System Telemetry` profile.
 $ cat >/etc/security/prof_attr.d/diamond
 System Telemetry:RO::\
 Allow access to system telemetry commands:
+^d
 ```
 ```
-$ cat >/etc/security/exec_attd.d/diamond
+$ cat >/etc/security/exec_attr.d/diamond
 System Telemetry:solaris:cmd:RO::/usr/sbin/fmstat:privs=sys_admin
 System Telemetry:solaris:cmd:RO::/usr/sbin/fmadm:privs=sys_admin
+^d
 ```
 
 Then grant the profile to the `diamond` user:
