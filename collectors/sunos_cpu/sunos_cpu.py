@@ -14,6 +14,7 @@ This collector only works on "global" CPU usage. If you want
 per-zone statistics, look at the 'zone_usage' collector.
 """
 
+
 class SunOSCPUCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -100,7 +101,7 @@ class SunOSCPUCollector(diamond.collector.Collector):
                 if sh.wanted(pc_metric_name, self.config['as_pc_delta']):
                     pc_in_state = delta / float(st_delta) * 100
                     self.publish('%d.%s' % (cpu_id, pc_metric_name),
-                        pc_in_state, precision=3)
+                                 pc_in_state, precision=3)
             except:
                 self.log.debug('cannot calculate %s delta' % m)
 
@@ -120,7 +121,8 @@ class SunOSCPUCollector(diamond.collector.Collector):
                 self.ns_and_pc(cpu, k)
 
                 per_cpu[cpu] = {k: per_cpu[cpu][k] for k in
-                        per_cpu[cpu] if not k.startswith('cpu_nsec')}
+                                per_cpu[cpu] if not
+                                k.startswith('cpu_nsec')}
 
         for cpu, kstats in per_cpu.items():
             kstats.pop('snaptime', None)

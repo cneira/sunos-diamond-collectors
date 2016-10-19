@@ -8,6 +8,7 @@ from mock import patch
 from diamond.collector import Collector
 from zpool import ZpoolCollector
 
+
 class TestZpoolCollector(CollectorTestCase):
     def setUp(self, config=None):
         if config is None:
@@ -31,34 +32,32 @@ class TestZpoolCollector(CollectorTestCase):
         self.assertEqual(ZpoolCollector.health_as_int(z, 'nosuch'), 4)
         self.assertEqual(ZpoolCollector.health_as_int(z, False), 4)
 
-
     @patch.object(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
         zpool_data = Mock(return_value=self.getFixture('zpool').
-                getvalue().strip().split('\n'))
+                          getvalue().strip().split('\n'))
 
-        collector_mock = patch.multiple(ZpoolCollector,
-                 zpool=zpool_data)
+        collector_mock = patch.multiple(ZpoolCollector, zpool=zpool_data)
 
         collector_mock.start()
         self.collector.collect()
         collector_mock.stop()
 
-        metrics = { 'crypto.free': 339302416384.0,
-                    'crypto.cap': 46.0,
-                    'crypto.health': 0,
-                    'fast.alloc': 23729694310.4,
-                    'fast.free': 440234147840.0,
-                    'fast.cap': 5.0,
-                    'fast.health': 0,
-                    'rpool.alloc': 30279519436.8,
-                    'rpool.free': 37903086387.2,
-                    'rpool.cap': 44.0,
-                    'rpool.health': 0,
-                    'space.alloc': 2045091627663.36,
-                    'space.free': 1231453023109.12,
-                    'space.cap': 62.0,
-                    'space.health': 0
-                    }
+        metrics = {'crypto.free': 339302416384.0,
+                   'crypto.cap': 46.0,
+                   'crypto.health': 0,
+                   'fast.alloc': 23729694310.4,
+                   'fast.free': 440234147840.0,
+                   'fast.cap': 5.0,
+                   'fast.health': 0,
+                   'rpool.alloc': 30279519436.8,
+                   'rpool.free': 37903086387.2,
+                   'rpool.cap': 44.0,
+                   'rpool.health': 0,
+                   'space.alloc': 2045091627663.36,
+                   'space.free': 1231453023109.12,
+                   'space.cap': 62.0,
+                   'space.health': 0
+                   }
 
         self.assertPublishedMany(publish_mock, metrics)

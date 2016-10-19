@@ -1,5 +1,7 @@
-import diamond.collector, re
+import diamond.collector
+import re
 import sunos_helpers as sh
+
 
 class SunOSDiskHealthCollector(diamond.collector.Collector):
 
@@ -26,9 +28,13 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
         ret = {}
 
         for k, v in sh.get_kstat(':::', ks_class='device_error',
-                only_num=False, statlist=self.config['sn_fields']).items():
-            dev, stat = list(re.split('[:,]', k)[i] for  i in (2,-1))
-            if dev not in ret: ret[dev] = {}
+                                 only_num=False,
+                                 statlist=self.config['sn_fields']).items():
+            dev, stat = list(re.split('[:,]', k)[i] for i in (2, -1))
+
+            if dev not in ret:
+                ret[dev] = {}
+
             ret[dev][stat] = v.strip()
 
         return ret
@@ -41,16 +47,16 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
             point_tags = self.disk_tags()
 
         for k, v in self.kstats().items():
-            dev, stat = list(re.split('[:,]', k)[i] for  i in (2,-1))
+            dev, stat = list(re.split('[:,]', k)[i] for i in (2, -1))
 
-            if not sh.wanted(dev, self.config['devices'],
-                    regex=True):
+            if not sh.wanted(dev, self.config['devices'], regex=True):
                 continue
 
-            if not sh.wanted(stat, self.config['fields']): continue
+            if not sh.wanted(stat, self.config['fields']):
+                continue
 
             if self.config['sn_tag'] and dev in point_tags.keys():
                 self.publish('%s.%s' % (dev, stat), v,
-                        point_tags=point_tags[dev])
+                             point_tags=point_tags[dev])
             else:
                 self.publish('%s.%s' % (dev, stat), v)

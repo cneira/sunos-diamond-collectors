@@ -8,6 +8,7 @@ from mock import patch
 from diamond.collector import Collector
 from smf_svc import SmfSvcCollector
 
+
 class TestSmfSvcCollector(CollectorTestCase):
     def setUp(self, config=None):
         if config is None:
@@ -25,22 +26,21 @@ class TestSmfSvcCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
         svc_data = Mock(return_value=self.getFixture('svcs').
-                getvalue().strip().split('\n'))
+                        getvalue().strip().split('\n'))
 
-        collector_mock = patch.multiple(SmfSvcCollector,
-                 svcs=svc_data)
+        collector_mock = patch.multiple(SmfSvcCollector, svcs=svc_data)
 
         collector_mock.start()
         self.collector.collect()
         collector_mock.stop()
 
-        metrics = { 'online': 149,
-                    'offline': 1,
-                    'uninitialized': 0,
-                    'degraded': 0,
-                    'maintenance': 2,
-                    'legacy_run': 3,
-                    'disabled': 100,
-                    }
+        metrics = {'online': 149,
+                   'offline': 1,
+                   'uninitialized': 0,
+                   'degraded': 0,
+                   'maintenance': 2,
+                   'legacy_run': 3,
+                   'disabled': 100,
+                   }
 
         self.assertPublishedMany(publish_mock, metrics)

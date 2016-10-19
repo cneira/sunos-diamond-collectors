@@ -33,6 +33,7 @@ operating systems.
 import diamond.collector
 import sunos_helpers as sh
 
+
 class ZpoolCollector(diamond.collector.Collector):
 
     def get_default_config(self):
