@@ -1,0 +1,13 @@
+---
+
+'sderr:2:sd2,err:device_not_ready': 0
+'sderr:2:sd2,err:hard_errors': 0
+'sderr:2:sd2,err:illegal_request': 420
+'sderr:2:sd2,err:media_error': 0
+'sderr:2:sd2,err:no_device': 0
+'sderr:2:sd2,err:non-aligned_writes': 0
+'sderr:2:sd2,err:predictive_failure_analysis': 0
+'sderr:2:sd2,err:recoverable': 0
+'sderr:2:sd2,err:size': 4000787030016
+'sderr:2:sd2,err:soft_errors': 0
+'sderr:2:sd2,err:transport_errors': 0
