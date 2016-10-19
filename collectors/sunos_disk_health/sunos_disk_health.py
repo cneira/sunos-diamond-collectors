@@ -24,6 +24,9 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
             })
         return config
 
+    def get_devs(self, stat):
+        return list(re.split('[:,]', stat)[i] for i in (2, -1))
+
     def disk_tags(self):
         """
         Wavefront gives us the ability to tag points. If the user
@@ -36,7 +39,7 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
         for k, v in sh.get_kstat(':::', ks_class='device_error',
                                  only_num=False,
                                  statlist=self.config['sn_fields']).items():
-            dev, stat = list(re.split('[:,]', k)[i] for i in (2, -1))
+            dev, stat = self.get_devs(k)
 
             if dev not in ret:
                 ret[dev] = {}
@@ -53,7 +56,7 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
             point_tags = self.disk_tags()
 
         for k, v in self.kstats().items():
-            dev, stat = list(re.split('[:,]', k)[i] for i in (2, -1))
+            dev, stat = self.get_devs(k)
 
             if not sh.wanted(dev, self.config['devices'], regex=True):
                 continue

@@ -63,14 +63,17 @@ class ZpoolCollector(diamond.collector.Collector):
             return 4
 
     def zpool(self):
-        #
-        # SmartOS and Solaris do not return the same fields for
-        # zpool information. Rather than hardcode each and hope
-        # neither changes, let's look at the header and use that to
-        # build up a dict for each pool. Put those in a dict with
-        # the zone name as the key.
-        #
-        raw = sh.run_cmd('/usr/sbin/zpool list')
+        sh.run_cmd('/usr/sbin/zpool list')
+
+    def zpool_dict(self):
+        """
+        SmartOS and Solaris do not return the same fields for zpool
+        information. Rather than hardcode each and hope neither
+        changes, let's look at the header and use that to build up a
+        dict for each pool. Put those in a dict with the zone name
+        as the key.
+        """
+        raw = self.zpool()
         ret = {}
 
         headers = raw.pop(0).lower().split()
@@ -82,9 +85,7 @@ class ZpoolCollector(diamond.collector.Collector):
         return ret
 
     def collect(self):
-        pools = self.zpool()
-
-        for pool, data in pools.items():
+        for pool, data in self.zpool_dict().items():
             for k, v in data.items():
 
                 if not sh.wanted(k, self.config['fields']):
