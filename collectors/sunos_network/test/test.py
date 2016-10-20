@@ -2,13 +2,6 @@ import sys
 import os
 import unittest
 
-class_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-2])
-help_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-4])
-
-sys.path.append('/opt/diamond/lib/python2.7/site-packages')
-sys.path.append(class_dir)
-sys.path.append(help_dir)
-
 from sunos_network import SunOSNetworkCollector as klass
 
 

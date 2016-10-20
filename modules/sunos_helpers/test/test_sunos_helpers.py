@@ -10,11 +10,6 @@ if platform.system() != 'SunOS':
     print 'Tests require a SunOS system.'
     sys.exit(1)
 
-class_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-2])
-sys.path.append(class_dir)
-kstat_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-3])
-sys.path.append(os.path.join(kstat_dir, 'kstat'))
-
 
 class TestSunOSHelpers(unittest.TestCase):
 
