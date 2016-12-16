@@ -1,4 +1,9 @@
-This directory contains horrible scripts to make a deployable tarball of
-these collectors, plus the kstat module, plus Diamond, plus Python.
+# Packaging
 
-I'll make a proper deployable artefact soon, I promise.
+In here is the stuff needed to build a deployable bundle, which
+includes Python, my own
+[Wavefront](https://www.wavefront.com/)-enabled
+[fork](https://github.com/snltd/Diamond/tree/feature/wavefront_handler)
+of Diamond, the SunOS-specific collectors, and the SMF needful to
+set them up.
+
