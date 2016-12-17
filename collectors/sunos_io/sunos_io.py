@@ -1,6 +1,7 @@
 import diamond.collector
 import sunos_helpers as sh
 
+
 class SunOSIOCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -14,7 +15,7 @@ class SunOSIOCollector(diamond.collector.Collector):
 
     def kstats(self):
         return sh.get_kstat(':::', ks_class='disk', no_times=True,
-                statlist=self.config['fields'])
+                            statlist=self.config['fields'])
 
     def collect(self):
         for k, v in self.kstats().items():

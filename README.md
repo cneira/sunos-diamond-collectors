@@ -10,8 +10,10 @@ platforms. I intend to cover system (global zone) collection and a
 subset of collectors for when you are a guest in, for example, the
 JPC.
 
-My target endpoint is [Wavefront](https://www.wavefront.com) using
-TSDB, though that ought not to matter.
+My target endpoint is [Wavefront](https://www.wavefront.com), and I
+have [a fork to Diamond with full Wavefront
+support](https://github.com/snltd/Diamond/tree/feature/wavefront_handler)
+which I hope will be merged into Diamond eventually.
 
 ## Dependencies
 
@@ -24,8 +26,8 @@ checked out somewhere in your Python path.
 ## Supported Platforms
 
 As of right now these are being developed and tested on x86 Solaris
-11.3. They *will* work with SmartOS at some point, but maybe not
-right now.
+11.3. They mostly work with SmartOS, though sometimes in a slightly
+different way due to the subtle differences between the platforms.
 
 ## Zoning
 
@@ -43,6 +45,10 @@ compiler to `pip install diamond`, and I'm old-fashioned enough that
 I don't have C compilers where I don't need to have them.) So, you
 may have to tweak your `PYTHONPATH` or `sys.path` to include things
 which are specific to my environment.
+
+If you want to deploy it properly, look in the `package/` directory
+for information on how to build a standalone Python + Diamond +
+collectors package.
 
 A test config for Diamond is supplied as `diamond-test.conf`, and
 there's a little wrapper script `run.sh` which fires up a test

@@ -1,6 +1,7 @@
 from os import path as p
 import yaml
 
+
 def read_fixture(includer, fixture):
     """
     Sometimes I can't use the supplied read fixture method because
@@ -17,8 +18,9 @@ def read_fixture(includer, fixture):
     """
 
     with open(p.join(p.dirname(p.realpath(includer)), 'fixtures',
-            fixture)) as fh:
+                     fixture)) as fh:
         return fh.read().strip().split('\n')
+
 
 def load_fixture(includer, fixture):
     """
@@ -27,5 +29,5 @@ def load_fixture(includer, fixture):
     """
 
     with open(p.join(p.dirname(p.realpath(includer)), 'fixtures',
-            fixture)) as fh:
+                     fixture)) as fh:
         return yaml.load(fh)

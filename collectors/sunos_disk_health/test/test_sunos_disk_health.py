@@ -9,14 +9,15 @@ from diamond.collector import Collector
 from sunos_disk_health import SunOSDiskHealthCollector
 import sunos_helpers.test_helpers as th
 
+
 class TestSunOSDiskHealthCollector(CollectorTestCase):
     def setUp(self, config=None):
         if config is None:
-            config = get_collector_config('SunOSDiskHealthCollector', {
-                'interval': '10',
-            })
+            config = get_collector_config('SunOSDiskHealthCollector',
+                                          {'interval': '10'})
         else:
-            config = get_collector_config('SunOSDiskHealthCollector', config)
+            config = get_collector_config('SunOSDiskHealthCollector',
+                                          config)
 
         self.collector = SunOSDiskHealthCollector(config, None)
 
@@ -26,24 +27,24 @@ class TestSunOSDiskHealthCollector(CollectorTestCase):
     @patch.object(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
         mock_kstats = Mock(return_value=th.load_fixture(__file__,
-            'cmdkerror'))
+                           'disk_errors'))
 
         collector_mock = patch.multiple(SunOSDiskHealthCollector,
-                 kstats=mock_kstats)
+                                        kstats=mock_kstats)
 
         collector_mock.start()
         self.collector.collect()
         collector_mock.stop()
 
-        metrics = { 'cmdk0.hard_errors': 0,
-                    'cmdk0.soft_errors': 0,
-                    'cmdk0.transport_errors': 0,
-                    'cmdk1.hard_errors': 15,
-                    'cmdk1.soft_errors': 1023,
-                    'cmdk1.transport_errors': 756,
-                    'cmdk2.hard_errors': 0,
-                    'cmdk2.soft_errors': 40,
-                    'cmdk2.transport_errors': 0,
-                    }
+        metrics = {'sd2.device_not_ready': 0,
+                   'sd2.hard_errors': 0,
+                   'sd2.illegal_request': 420,
+                   'sd2.media_error': 0,
+                   'sd2.no_device': 0,
+                   'sd2.non-aligned_writes': 0,
+                   'sd2.predictive_failure_analysis': 0,
+                   'sd2.soft_errors': 0,
+                   'sd2.transport_errors': 0,
+                   }
 
-        self.assertPublishedMany(publish_mock, metrics)
+        self.assertPublishedMany(publish_mock, metrics, 1)

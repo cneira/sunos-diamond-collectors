@@ -2,6 +2,7 @@ import diamond.collector
 import sunos_helpers as sh
 from sys import maxint
 
+
 class SmartOSZoneCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -36,9 +37,14 @@ class SmartOSZoneCollector(diamond.collector.Collector):
         for kstat in ('swapresv', 'lockedmem', 'nprocs', 'cpucaps',
                       'physicalmem', 'memcap'):
             for k, v in sh.get_kstat('caps:%d:%s_zone_%d' % (zid,
-                kstat, zid), no_times=False, terse=True).items():
-                if k == 'snaptime': continue
-                if k == 'value' and v > maxint * 2: continue
+                                     kstat, zid), no_times=False,
+                                     terse=True).items():
+                if k == 'snaptime':
+                    continue
+
+                if k == 'value' and v > maxint * 2:
+                    continue
+
                 self.publish('%s.%s' % (kstat, k), v)
 
         # I think nearly everything in the memory_cap kstat module
@@ -63,6 +69,7 @@ class SmartOSZoneCollector(diamond.collector.Collector):
 
             for k, v in memcap.items():
                 self.publish('memory_cap.%s' % k,
-                        self.derivative(k, v, time_delta=snaptime_delta))
+                             self.derivative(k, v,
+                                             time_delta=snaptime_delta))
 
         self.last_values['memcap_snaptime'] = snaptime

@@ -1,5 +1,7 @@
-import diamond.collector, re
+import diamond.collector
+import re
 import sunos_helpers as sh
+
 
 class SunOSDiskHealthCollector(diamond.collector.Collector):
 
@@ -7,14 +9,23 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
         config = super(SunOSDiskHealthCollector, self).get_default_config()
         config.update({
             'devices':   '__all__',
-            'fields':    ['hard_errors', 'soft_errors' 'transport_errors',
-                          'device_not_ready', 'illegal_request',
+            'fields':    ['hard_errors',
+                          'soft_errors',
+                          'transport_errors',
+                          'device_not_ready',
+                          'illegal_request',
+                          'media_error',
+                          'no_device',
+                          'non-aligned_writes',
                           'predictive_failure_analysis'],
             'path':       'disk.error',
             'sn_tag':    True,
             'sn_fields': ['Model', 'Serial No', 'Vendor', 'Product'],
             })
         return config
+
+    def get_devs(self, stat):
+        return list(re.split('[:,]', stat)[i] for i in (2, -1))
 
     def disk_tags(self):
         """
@@ -26,9 +37,13 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
         ret = {}
 
         for k, v in sh.get_kstat(':::', ks_class='device_error',
-                only_num=False, statlist=self.config['sn_fields']).items():
-            dev, stat = list(re.split('[:,]', k)[i] for  i in (2,-1))
-            if dev not in ret: ret[dev] = {}
+                                 only_num=False,
+                                 statlist=self.config['sn_fields']).items():
+            dev, stat = self.get_devs(k)
+
+            if dev not in ret:
+                ret[dev] = {}
+
             ret[dev][stat] = v.strip()
 
         return ret
@@ -41,16 +56,16 @@ class SunOSDiskHealthCollector(diamond.collector.Collector):
             point_tags = self.disk_tags()
 
         for k, v in self.kstats().items():
-            dev, stat = list(re.split('[:,]', k)[i] for  i in (2,-1))
+            dev, stat = self.get_devs(k)
 
-            if not sh.wanted(dev, self.config['devices'],
-                    regex=True):
+            if not sh.wanted(dev, self.config['devices'], regex=True):
                 continue
 
-            if not sh.wanted(stat, self.config['fields']): continue
+            if not sh.wanted(stat, self.config['fields']):
+                continue
 
             if self.config['sn_tag'] and dev in point_tags.keys():
                 self.publish('%s.%s' % (dev, stat), v,
-                        point_tags=point_tags[dev])
+                             point_tags=point_tags[dev])
             else:
                 self.publish('%s.%s' % (dev, stat), v)

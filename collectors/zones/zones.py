@@ -12,16 +12,16 @@ Zone Status Collector
 import diamond.collector
 import sunos_helpers
 
+
 class ZonesCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(ZonesCollector, self).get_default_config()
-        config.update({
-            'path':   'zone',
-            'states': ['configured', 'down', 'incomplete',
-                       'installed', 'ready', 'running', 'shutting_down'
-                      ],
-            })
+        config.update({'path':   'zone',
+                       'states': ['configured', 'down', 'incomplete',
+                                  'installed', 'ready', 'running',
+                                  'shutting_down'],
+                       })
         return config
 
     def zoneadm(self):

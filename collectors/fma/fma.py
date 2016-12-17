@@ -25,6 +25,7 @@ import sunos_helpers as sh
 import re
 from collections import Counter
 
+
 class FMACollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -50,8 +51,8 @@ class FMACollector(diamond.collector.Collector):
 
     def fmadm_impacts(self, fmadm_info):
         impacts = filter(lambda l: re.search('Problem class', l),
-                fmadm_info)
-        return  [i.split(':')[1].strip() for i in impacts]
+                         fmadm_info)
+        return [i.split(':')[1].strip() for i in impacts]
 
     def collate_fmstats(self, fmstat_info):
         """

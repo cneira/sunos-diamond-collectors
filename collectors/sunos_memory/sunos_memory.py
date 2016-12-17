@@ -2,6 +2,7 @@ import diamond.collector
 import sunos_helpers as sh
 import re
 
+
 class SunOSMemoryCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -15,6 +16,7 @@ class SunOSMemoryCollector(diamond.collector.Collector):
             'per_cpu_swapping': False,
             'per_cpu_paging':   False,
             })
+
         return config
 
     def pagesize(self):
@@ -41,10 +43,10 @@ class SunOSMemoryCollector(diamond.collector.Collector):
             sh.run_cmd('/usr/sbin/swap -s'))
 
         for i, metric in enumerate(['allocated', 'reserved', 'used',
-            'available']):
+                                   'available']):
             if sh.wanted(metric, self.config['swap_fields']):
-                self.publish('swap.%s' % metric, int(info.group(i + 1))
-                        * 1024)
+                self.publish('swap.%s' % metric, int(info.group(i + 1)) *
+                             1024)
 
     def collect_vminfo(self, pgs):
         """
@@ -55,10 +57,9 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         """
 
         for k, v in sh.get_kstat('unix:0:vminfo', terse=True,
-                no_times=True).items():
+                                 no_times=True).items():
             if sh.wanted(k, self.config['vminfo_fields']):
-                self.publish('vminfo.%s' % k, self.derivative(k, v)
-                        * pgs)
+                self.publish('vminfo.%s' % k, self.derivative(k, v) * pgs)
 
     def collect_in_and_out(self, ks, ptn, prefix):
         """
@@ -80,15 +81,18 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         sums = {}
         fields = self.config['%s_fields' % prefix]
 
-        for k, v in { k:v for (k,v) in ks.items() if k.endswith('%sin' %
-            ptn) or k.endswith('%sout' % ptn) }.items():
+        for k, v in {k: v for (k, v) in ks.items()
+                     if k.endswith('%sin' % ptn) or
+                     k.endswith('%sout' % ptn)}.items():
             c = k.split(':')
 
             if self.config['per_cpu_%s' % prefix] == True and sh.wanted(k,
                     fields):
                 self.publish('%s.cpu.%s.%s' % (prefix, c[1], c[3]), v)
             else:
-                if c[3] not in sums: sums[c[3]] = 0
+                if c[3] not in sums:
+                    sums[c[3]] = 0
+
                 sums[c[3]] += v
 
         for k, v in sums.items():
@@ -100,16 +104,16 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         #
         # Start off with a few simple, system-wide things
         #
-        kpg = sh.get_kstat('unix:0:system_pages:pp_kernel',
-                single_val=True)
+        kpg = sh.get_kstat('unix:0:system_pages:pp_kernel', single_val=True)
 
         self.publish('kernel', int(kpg) * pgs)
 
         self.publish('arc_size', sh.get_kstat('zfs:0:arcstats:size',
-            single_val=True))
+                     single_val=True))
 
         self.publish('pages.free',
-            sh.get_kstat('unix:0:system_pages:pagesfree', single_val=True))
+                     sh.get_kstat('unix:0:system_pages:pagesfree',
+                                  single_val=True))
 
         if (self.config['swap_fields'] and self.config['swap_fields'] !=
                 '__none__'):
@@ -122,4 +126,3 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         ks = sh.get_kstat('cpu::vm')
         self.collect_in_and_out(ks, 'pg', 'paging')
         self.collect_in_and_out(ks, 'swap', 'swapping')
-

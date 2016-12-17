@@ -2,11 +2,14 @@
 A library of functions to support my SunOS collectors
 """
 
-import subprocess, re, kstat
+import subprocess
+import re
+import kstat
 from os import path
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Command execution stuff
+
 
 def run_cmd(cmd_str, pfexec=False):
     """
@@ -48,7 +51,8 @@ def run_cmd(cmd_str, pfexec=False):
         else:
             return out[0]
     else:
-        raise Exception('error: %s' %err)
+        raise Exception('error: %s' % err)
+
 
 def zoneadm():
     """
@@ -65,8 +69,9 @@ def zoneadm():
     else:
         return ret
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Miscellany
+
 
 def wanted(have, want, regex=False):
     """
@@ -86,8 +91,11 @@ def wanted(have, want, regex=False):
 
     assert isinstance(have, basestring)
 
-    if want == '__all__': return True
-    if want == '__none__' or not want: return False
+    if want == '__all__':
+        return True
+
+    if want == '__none__' or not want:
+        return False
 
     if regex:
         if isinstance(want, basestring):
@@ -95,20 +103,23 @@ def wanted(have, want, regex=False):
                 return True
         else:
             for item in want:
-                if re.match(item, have): return True
+                if re.match(item, have):
+                    return True
 
     else:
         if isinstance(want, basestring):
             return True if want == have else False
 
-    if have in want: return True
+    if have in want:
+        return True
 
     return False
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Conversion stuff
 
-def bytify(size, use_thousands = False):
+
+def bytify(size, use_thousands=False):
     """
     Feed it a number with an ISO suffix and it will give you back the
     bytes in that number.
@@ -137,8 +148,9 @@ def bytify(size, use_thousands = False):
         except:
             raise ValueError
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # kstat stuff
+
 
 def kstat_req_parse(descriptor):
     """
@@ -157,16 +169,22 @@ def kstat_req_parse(descriptor):
     for key in ['module', 'instance', 'name', 'statistic']:
         try:
             value = parts.pop(0)
-            if not value: raise
+
+            if not value:
+                raise
+
             ret[key] = value
         except:
             ret[key] = None
 
-    if ret['instance']: ret['instance'] = int(ret['instance'])
+    if ret['instance']:
+        ret['instance'] = int(ret['instance'])
+
     return ret
 
+
 def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
-        ks_class = None, statlist=None, single_val=False):
+              ks_class=None, statlist=None, single_val=False):
     """
     A general-purpose kstat accessor.
 
@@ -201,10 +219,12 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     assert isinstance(only_num, bool)
     assert isinstance(no_times, bool)
     assert isinstance(terse, bool)
-    if isinstance(statlist, basestring): statlist = [statlist]
+
+    if isinstance(statlist, basestring):
+        statlist = [statlist]
 
     d = kstat_req_parse(descriptor)
-    ret ={}
+    ret = {}
 
     if d['module']:
         ko = kstat.Kstat(d['module'])
@@ -212,17 +232,27 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
         ko = kstat.Kstat()
 
     for mod, inst, name, kclass, ks_type, ksp in ko._iterksp():
-        if d['instance'] != None and inst != d['instance']: continue
-        if d['name'] != None and name != d['name']: continue
-        if ks_class != None and kclass != ks_class: continue
+        if d['instance'] is not None and inst != d['instance']:
+            continue
+
+        if d['name'] is not None and name != d['name']:
+            continue
+
+        if ks_class is not None and kclass != ks_class:
+            continue
+
         astat = ko[mod, inst, name]
 
         for k, v in astat.items():
-            if d['statistic'] != None and k != d['statistic']: continue
-            if statlist != None and statlist != ['__all__'] and \
-                    k not in statlist: continue
+            if d['statistic'] is not None and k != d['statistic']:
+                continue
+
+            if statlist is not None and statlist != ['__all__'] and \
+                    k not in statlist:
+                        continue
             if k == 'snaptime' or k == 'crtime':
-                if no_times: continue
+                if no_times:
+                    continue
                 v = long(v)
             if only_num:
                 try:
@@ -230,17 +260,22 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
                 except:
                     continue
 
-            if single_val: return v
+            if single_val:
+                return v
+
             k = k.lower().replace(' ', '_')
-            if not terse: k = '%s:%d:%s:%s' % (mod, inst, name, k)
+
+            if not terse:
+                k = '%s:%d:%s:%s' % (mod, inst, name, k)
             ret[k] = v
 
     return ret
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # MISCELLANY
 
-def zone_map(zoneadm, passthru = '__all__'):
+
+def zone_map(zoneadm, passthru='__all__'):
     """
     Return a map of zone ID to zone name. Can't be cached because
     zones could be rebooted and get a different ID mid-flight. This
@@ -262,8 +297,8 @@ def zone_map(zoneadm, passthru = '__all__'):
 
         if len(chunks) < 8:
             raise NotImplementedError(
-            'cannot parse zoneadm output: %d fields in %s' %
-            (len(chunks), zoneadm))
+              'cannot parse zoneadm output: %d fields in %s' %
+              (len(chunks), zoneadm))
 
         if chunks[0] == '-':
             continue
@@ -278,6 +313,6 @@ def zone_map(zoneadm, passthru = '__all__'):
     """
 
     if len(zoneadm) == 1 and ret.keys()[0] != 'global':
-        ret = { '0': ret.values()[0] }
+        ret = {'0': ret.values()[0]}
 
     return ret

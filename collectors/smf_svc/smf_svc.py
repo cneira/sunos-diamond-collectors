@@ -36,6 +36,7 @@ offline, or in maintenance state.
 import diamond.collector
 import sunos_helpers as sh
 
+
 class SmfSvcCollector(diamond.collector.Collector):
 
     def get_default_config(self):
@@ -97,4 +98,3 @@ class SmfSvcCollector(diamond.collector.Collector):
             for state, count in data.items():
                 if sh.wanted(state, self.config['states']):
                     self.publish(prefix + state, count)
-

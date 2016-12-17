@@ -1,17 +1,15 @@
 #!/bin/env python
 
-import platform, sys, os, unittest
+import platform
+import sys
+import os
+import unittest
+import sunos_helpers as sh
 
 if platform.system() != 'SunOS':
     print 'Tests require a SunOS system.'
     sys.exit(1)
 
-class_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-2])
-sys.path.append(class_dir)
-kstat_dir = '/'.join(os.path.realpath(__file__).split('/')[0:-3])
-sys.path.append(os.path.join(kstat_dir, 'kstat'))
-
-import sunos_helpers as sh
 
 class TestSunOSHelpers(unittest.TestCase):
 
@@ -28,7 +26,7 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertIsInstance(sh.run_cmd('/bin/uname -s'), basestring)
         self.assertEqual(sh.run_cmd('/bin/uname -s'), 'SunOS')
         self.assertIsInstance(sh.run_cmd('/bin/sed 5q /etc/passwd'),
-                list)
+                              list)
         self.assertEqual(len(sh.run_cmd('/bin/sed 5q /etc/passwd')), 5)
 
         # This test requires a suitable profile. I gave myself this
@@ -81,29 +79,29 @@ class TestSunOSHelpers(unittest.TestCase):
 
     def test_kstat_req_parse(self):
         self.assertEqual(sh.kstat_req_parse('nfs:3:nfs_server:calls'),
-                { 'module': 'nfs', 'instance': 3, 'name': 'nfs_server',
-                    'statistic': 'calls' })
+                         {'module': 'nfs', 'instance': 3, 'name':
+                          'nfs_server', 'statistic': 'calls'})
         self.assertEqual(sh.kstat_req_parse('nfs:3:nfs_server'),
-                { 'module': 'nfs', 'instance': 3, 'name': 'nfs_server',
-                    'statistic': None })
+                         {'module': 'nfs', 'instance': 3, 'name':
+                          'nfs_server', 'statistic': None})
         self.assertEqual(sh.kstat_req_parse('nfs:3'),
-                { 'module': 'nfs', 'instance': 3, 'name': None,
-                    'statistic': None })
+                         {'module': 'nfs', 'instance': 3,
+                          'name': None, 'statistic': None})
         self.assertEqual(sh.kstat_req_parse(':::'),
-                { 'module': None, 'instance': None, 'name': None,
-                    'statistic': None })
+                         {'module': None, 'instance': None,
+                          'name': None, 'statistic': None})
         self.assertEqual(sh.kstat_req_parse('nfs'),
-                { 'module': 'nfs', 'instance': None, 'name': None,
-                    'statistic': None })
+                         {'module': 'nfs', 'instance': None,
+                          'name': None, 'statistic': None})
         self.assertEqual(sh.kstat_req_parse('nfs::nfs_server'),
-                { 'module': 'nfs', 'instance': None, 'name':
-                'nfs_server', 'statistic': None })
+                         {'module': 'nfs', 'instance': None,
+                          'name': 'nfs_server', 'statistic': None})
         self.assertEqual(sh.kstat_req_parse('nfs:::calls'),
-                { 'module': 'nfs', 'instance': None, 'name': None,
-                'statistic': 'calls' })
+                         {'module': 'nfs', 'instance': None,
+                          'name': None, 'statistic': 'calls'})
         self.assertEqual(sh.kstat_req_parse('::disk:'),
-                { 'module': None, 'instance': None, 'name': 'disk',
-                'statistic': None })
+                         {'module': None, 'instance': None,
+                          'name': 'disk', 'statistic': None})
 
     def test_get_kstat(self):
         self.assertEqual(sh.get_kstat('nosuch:0:kstat:name'), {})
@@ -114,13 +112,12 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertEqual(sh.get_kstat('nosuch'), {})
 
         self.assertIsInstance(sh.get_kstat('cpu:0:sys:canch',
-            single_val=True), long)
+                                           single_val=True), long)
 
         self.assertEqual(len(sh.get_kstat('cpu::vm:pgin')),
-            len(sh.run_cmd('/usr/sbin/psrinfo')))
+                         len(sh.run_cmd('/usr/sbin/psrinfo')))
         self.assertEqual(len(sh.get_kstat('cpu:0:vm:pgin')), 1)
-        self.assertEqual(sh.get_kstat('cpu:0:vm:pgin', ks_class='disk'),
-                {})
+        self.assertEqual(sh.get_kstat('cpu:0:vm:pgin', ks_class='disk'), {})
 
         res = sh.get_kstat('cpu:0:vm')
         self.assertIsInstance(res, dict)
@@ -129,48 +126,49 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertIn('cpu:0:vm:crtime', res.keys())
 
         self.assertNotIn('cpu:0:vm:crtime', sh.get_kstat('cpu:0:vm',
-            no_times=True))
+                         no_times=True))
 
         self.assertNotIn('cpu:0:vm:crtime', sh.get_kstat('cpu:0:vm',
-            no_times=True))
+                         no_times=True))
 
         self.assertNotIn('cpu_info:0:cpu_info0:brand',
-                sh.get_kstat('cpu_info:0:cpu_info0').keys())
+                         sh.get_kstat('cpu_info:0:cpu_info0').keys())
 
         self.assertIn('cpu_info:0:cpu_info0:brand',
-                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False).keys())
+                      sh.get_kstat('cpu_info:0:cpu_info0',
+                                   only_num=False).keys())
 
         self.assertIn('brand',
-                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
-                    terse=True).keys())
+                      sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
+                                   terse=True).keys())
 
         self.assertNotIn('cpu_info:0:cpu_info0:brand',
-                sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
-                    terse=True).keys())
+                         sh.get_kstat('cpu_info:0:cpu_info0',
+                                      only_num=False, terse=True).keys())
 
-        self.assertNotRegexpMatches(''.join(sh.get_kstat('ip:0:icmp').keys()),
-                '[A-Z]')
+        self.assertNotRegexpMatches(''.join(sh.get_kstat('ip:0:icmp').
+                                    keys()), '[A-Z]')
 
         self.assertEqual(sh.get_kstat(':::', ks_class='nosuch'), {})
         self.assertEqual(sh.get_kstat('cpu:0:vm', ks_class='disk'), {})
 
         self.assertIn('ilb:0:global:snaptime', sh.get_kstat(':::',
-            ks_class='kstat'))
+                      ks_class='kstat'))
 
         self.assertNotIn('ilb:0:global:snaptime', sh.get_kstat(':::',
-            ks_class='kstat', no_times=True))
+                         ks_class='kstat', no_times=True))
 
-        self.assertEqual(sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
-                statlist=['nosuch']), {})
+        self.assertEqual(sh.get_kstat('cpu_info:0:cpu_info0',
+                         only_num=False, statlist=['nosuch']), {})
 
         res = sh.get_kstat('cpu_info:0:cpu_info0', only_num=False,
-                terse=True, statlist=('state', 'core_id'))
+                           terse=True, statlist=('state', 'core_id'))
 
         self.assertEqual(len(res), 2)
         self.assertItemsEqual(res.keys(), ['state', 'core_id'])
 
         self.assertIn('core_id', sh.get_kstat('cpu_info:0:cpu_info0',
-            statlist='__all__', terse=True))
+                      statlist='__all__', terse=True))
 
 if __name__ == '__main__':
     unittest.main()

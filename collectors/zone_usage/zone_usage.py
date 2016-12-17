@@ -8,15 +8,15 @@ kind of built on the assumption you have resource caps on all of those
 zones, because if you don't, many of the kstats will be meaningless.
 """
 
+
 class ZoneUsageCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(ZoneUsageCollector, self).get_default_config()
-        config.update({
-            'path':   'zone.usage',
-            'zones':  '__all__',
-            'show_caps': False,
-            })
+        config.update({'path':   'zone.usage',
+                       'zones':  '__all__',
+                       'show_caps': False,
+                       })
         return config
 
     def kstats(self, zid):
@@ -46,7 +46,6 @@ class ZoneUsageCollector(diamond.collector.Collector):
 
         return ret
 
-
     def do_one_zone(self, zone, zid):
         """
         We're going to do a little massaging of the kstat names.
@@ -67,7 +66,7 @@ class ZoneUsageCollector(diamond.collector.Collector):
                     stat.endswith('value')):
                 self.log.debug(stat)
                 self.publish('%s.cpucaps.%s' % (zone,
-                    stat.split(':')[-1]), val)
+                             stat.split(':')[-1]), val)
 
             if (stat == 'caps:%s:swapresv_zone_%s:usage' % (zid, zid)):
                 self.publish('%s.memory.swapresv.usage' % zone, val)
@@ -96,14 +95,9 @@ class ZoneUsageCollector(diamond.collector.Collector):
     def deal_with_tasks(self, tasks, zid):
         for task in tasks:
             self.log.debug(task)
-        #self.log.debug(self.tm[zid])
 
     def collect(self):
         zm = sh.zone_map(sh.zoneadm(), self.config['zones'])
-        #self.tm = self.process_table()
-
-        #zid = str(5)
-        #self.do_one_zone('shark-graylog', zid)
 
         # Our get_kstat() method doesn't handle wildcards (maybe it
         # should?) so we'll have to do a call for each zone.

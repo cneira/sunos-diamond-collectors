@@ -26,11 +26,12 @@ try:
 except ImportError:
     setproctitle = None
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+    'modules')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                              'collectors')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                             'kstat')))
+                                             'modules', 'kstat')))
 sys.path.append('/opt/diamond/lib/python2.7/site-packages/')
 
 
