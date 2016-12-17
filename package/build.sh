@@ -39,7 +39,6 @@ die() {
     exit ${2:-1}
 }
 
-
 msg() {
     print $*
 }
@@ -66,15 +65,14 @@ compile_python()
 
 	if [[ -n $IS_SMARTOS ]]
 	then
-		msg "altering setup.py for SmartOS [${BUILD_DIR}/Python-${PYTHON_VER}/setup.py]"
+		msg "altering ${BUILD_DIR}/Python-${PYTHON_VER}/setup.py"
 		$SED -i 's|usr/local|opt/local|g' \
 			${BUILD_DIR}/Python-${PYTHON_VER}/setup.py
 	fi
 
     msg "configuring with prefix '$TMPDIR/diamond'"
 
-    CC=$CC CFLAGS=$CFLAGS ./configure --prefix=${TMPDIR}/diamond \
-		--with-system-ffi >/dev/null
+    CC=$CC CFLAGS=$CFLAGS ./configure --prefix=${TMPDIR}/diamond >/dev/null
 
     msg "compiling Python"
     gmake -j4 >/dev/null 2>&1
@@ -122,7 +120,14 @@ install_fork()
     $SED -i "s|/etc/diamond|${TMPDIR}/diamond/etc|" setup.py
     ${TMPDIR}/diamond/bin/python setup.py install
 
-    for prog in $(grep -l $TMPDIR ${TMPDIR}/diamond/bin/*)
+	if [[ $IS_SMARTOS ]]
+	then
+		script_list=$(grep -Il $TMPDIR ${TMPDIR}/diamond/bin/*)
+	else
+		script_list=$(grep -l $TMPDIR ${TMPDIR}/diamond/bin/*)
+	fi
+
+    for prog in $script_list
     do
         print "fixing interpreter in $prog"
         $SED -i "s|${TMPDIR}|${LOC}|" $prog
@@ -166,11 +171,47 @@ install_sunos_collectors()
         ${COL_DIR}/modules/kstat >/dev/null
 }
 
+create_pkgin()
+{
+	P_DIR=${TMPDIR}/pkgin
+	PKG_NAME=sdef-diamond-$(date "+%Y%m%d%H%M").tgz
+	mkdir -p $P_DIR
+
+	find ${TMPDIR}/diamond ! -type d \
+		| sed "s|${TMPDIR}/||" >${P_DIR}/pkglist
+
+	pkg_info -X pkg_install \
+		| egrep '^(MACHINE_ARCH|OPSYS|OS_VERSION|PKGTOOLS_VERSION)' \
+		>${P_DIR}/build-info
+
+	print "Diamond metric collector for SmartOS. Python $PY_VER" \
+		>${P_DIR}/comment
+
+	print "Diamond metric collector for SmartOS" >${P_DIR}/description
+
+    pkg_create \
+		-v \
+        -B ${P_DIR}/build-info \
+        -d ${P_DIR}/description \
+        -c ${P_DIR}/comment \
+        -f ${P_DIR}/pkglist \
+        -I $LOC \
+        -p ${TMPDIR} \
+        ${HOME}/${PKG_NAME}
+}
+
 create_artefact()
 {
-    OUT=${PYTHON_DIR}/diamond-${1}.tar.gz
-    msg "creating artefact $OUT"
-    $TAR zcf $OUT -C $TMPDIR diamond
+	OUT=${PYTHON_DIR}/diamond-${1}-$(date "+%Y%m%d%H%M").tar.gz
+
+	if [[ $IS_SMARTOS ]]
+	then
+		create_pkgin
+	else
+		msg "creating artefact $OUT"
+		$TAR zcf $OUT -C $TMPDIR diamond
+	fi
+
     rm -fr $TMPDIR
 }
 
@@ -189,7 +230,6 @@ build()
 }
 
 TMPDIR=$(mktemp -d -p /var/tmp)
-#TMPDIR=/var/tmp/tmp.HUbOUqUCmi
 
 print "building in $TMPDIR"
 
