@@ -7,14 +7,16 @@ class SunOSMemoryCollector(diamond.collector.Collector):
 
     def get_default_config(self):
         config = super(SunOSMemoryCollector, self).get_default_config()
-        config.update({'vminfo_fields':   '__all__',
-                       'swap_fields':     '__all__',
-                       'swapping_fields': '__all__',
-                       'paging_fields':   '__all__',
-                       'path':            'memory',
-                       'per_cpu_swapping': True,
-                       'per_cpu_paging':   True,
-                       })
+        config.update({
+            'path':            'memory',
+            'vminfo_fields':   '__all__',
+            'swap_fields':     '__all__',
+            'swapping_fields': '__all__',
+            'paging_fields':   '__all__',
+            'per_cpu_swapping': False,
+            'per_cpu_paging':   False,
+            })
+
         return config
 
     def pagesize(self):
@@ -77,7 +79,6 @@ class SunOSMemoryCollector(diamond.collector.Collector):
         """
 
         sums = {}
-
         fields = self.config['%s_fields' % prefix]
 
         for k, v in {k: v for (k, v) in ks.items()
@@ -85,7 +86,8 @@ class SunOSMemoryCollector(diamond.collector.Collector):
                      k.endswith('%sout' % ptn)}.items():
             c = k.split(':')
 
-            if self.config['per_cpu_%s' % prefix] and sh.wanted(k, fields):
+            if self.config['per_cpu_%s' % prefix] == True and sh.wanted(k,
+                    fields):
                 self.publish('%s.cpu.%s.%s' % (prefix, c[1], c[3]), v)
             else:
                 if c[3] not in sums:
