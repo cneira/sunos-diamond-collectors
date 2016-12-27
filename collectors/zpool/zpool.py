@@ -40,21 +40,23 @@ class ZpoolCollector(diamond.collector.Collector):
         config = super(ZpoolCollector, self).get_default_config()
         config.update({
             'path':  'zpool',
-            'fields': ['alloc', 'free', 'cap', 'health']
+            'fields': ['alloc', 'free', 'cap', 'health'],
+            'count':  '__all__',
             })
         return config
 
     def health_as_int(self, health):
-        #
-        # convert the health of a zpool to an integer, so you can
-        # alert off it.
-        #
-        # 0 : ONLINE
-        # 1 : DEGRADED
-        # 2 : SUSPENDED
-        # 3 : UNAVAIL
-        # 4 : <cannot parse>
-        #
+        """
+        convert the health of a zpool to an integer, so you can
+        alert off it.
+
+        0 : ONLINE
+        1 : DEGRADED
+        2 : SUSPENDED
+        3 : UNAVAIL
+        4 : <cannot parse>
+        """
+
         states = ['ONLINE', 'DEGRADED', 'SUSPENDED', 'UNAVAIL']
 
         try:
@@ -63,7 +65,19 @@ class ZpoolCollector(diamond.collector.Collector):
             return 4
 
     def zpool(self):
-        sh.run_cmd('/usr/sbin/zpool list')
+        return sh.run_cmd('/usr/sbin/zpool list')
+
+    def count_items(self, pool, item_type):
+        """
+        Count the number of datasets or snapshots in the pool.
+
+        :param pool: the pool to examine. (strin)
+        :param item_type: what you want the number of. Can be
+            'filesystem', 'snapshot', 'volume', or 'all'. (string)
+        """
+
+        return len(sh.run_cmd('/usr/sbin/zfs list -rH -t %s %s'
+            % (item_type, pool)))
 
     def zpool_dict(self):
         """
@@ -85,7 +99,14 @@ class ZpoolCollector(diamond.collector.Collector):
         return ret
 
     def collect(self):
+        counts = ['filesystem', 'snapshot', 'volume']
+
         for pool, data in self.zpool_dict().items():
+            for count in counts:
+                if sh.wanted(count, self.config['count']):
+                    self.publish('%s.count.%s' % (pool, count),
+                            self.count_items(pool, count))
+
             for k, v in data.items():
 
                 if not sh.wanted(k, self.config['fields']):

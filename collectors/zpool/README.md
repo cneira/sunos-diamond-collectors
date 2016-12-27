@@ -12,11 +12,17 @@ necessarily be displayed without amending the collector.
 
 * **`fields`**: a list of metrics you wish to collect. For all
   metrics, use the magic value `__all__`.
+* **`count`**: the collector can report the number of `filesystem`s,
+  `snaphost`s, and `volume`s in a pool. Provide a list of any or all
+  of those if you wish to have them.
 
 ## Statistics
 
-Collecting information on four pools on an 8-core i7 system takes
-around 15ms.
+Collecting field information on four pools on an 8-core i7 system takes
+around 15ms. Collecting the `count` metrics can take far longer. For
+instance, on a pool with around 1500 snapshots, the `count.snapshot`
+metric takes almost two seconds. This is a limitation of the `zfs`
+command.
 
 ## Metric Paths
 
@@ -40,6 +46,12 @@ on Solaris 11.3, and
 `zpool.<pool>.size` (float)
 
 on SmartOS 20160901.
+
+You can also get
+
+`zpool.<pool>.count.filesystem`
+`zpool.<pool>.count.snapshot`
+`zpool.<pool>.count.volume`
 
 You can choose any subset of these via the `fields` configuration
 setting, or use standard Diamond whitelist/blacklisting.
