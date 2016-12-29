@@ -5,3 +5,9 @@ languages:
   Python: true
 exclude_paths:
 - "test.py"
+engines:
+  duplication:
+    enabled: true
+    checks:
+      Similar code:
+        enabled: false
