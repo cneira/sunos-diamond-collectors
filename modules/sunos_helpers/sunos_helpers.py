@@ -5,6 +5,7 @@ A library of functions to support my SunOS collectors
 import subprocess
 import re
 import kstat
+import string
 from os import path
 
 # ------------------------------------------------------------------------
@@ -316,3 +317,48 @@ def zone_map(zoneadm, passthru='__all__'):
         ret = {'0': ret.values()[0]}
 
     return ret
+
+def grep(pattern, arr):
+    """
+    Return a list of elements of 'raw' which match 'pattern'
+    :param pattern: a regex-string which will be matched against
+    each element
+    :param arr: a list of strings to match against.
+    :returns: a list of matches. The list can be empty
+    """
+
+    assert isinstance(pattern, basestring)
+    assert isinstance(arr, list)
+
+    ret = []
+
+    for el in arr:
+        if re.search(pattern, el):
+            ret.append(el)
+
+    return ret
+
+def handle_value(value):
+    """
+    Some things are human-format numbers. bytify() can deal with
+    those. We can also get ratios (as in dedup) and percentages.
+    """
+
+    if value[-1] == 'x':
+        return float(value[0:-1])
+
+    if value[-1] == '%':
+        return float(value[0:-1])
+
+    if value[0].isdigit():
+        return bytify(value)
+
+    raise ValueError
+
+def to_metric(raw, separator='/'):
+    """
+    Take something with "bad" characters in, and return it as a safe
+    metric path. For instance, removing slashes from ZFS dataset names.
+    """
+
+    return raw.translate(string.maketrans(separator, '.'))
