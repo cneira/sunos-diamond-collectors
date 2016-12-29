@@ -1,9 +1,0 @@
----
-
-JavaScript: false
-Ruby: false
-Python: true
-PHP: false
-
-exclude_paths:
-  - test.py
