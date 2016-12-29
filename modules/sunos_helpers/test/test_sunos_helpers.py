@@ -4,6 +4,11 @@ import platform
 import sys
 import os
 import unittest
+
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(
+    os.path.dirname(os.path.dirname(__file__))), 'kstat')))
+
 import sunos_helpers as sh
 
 if platform.system() != 'SunOS':
@@ -169,6 +174,19 @@ class TestSunOSHelpers(unittest.TestCase):
 
         self.assertIn('core_id', sh.get_kstat('cpu_info:0:cpu_info0',
                       statlist='__all__', terse=True))
+
+    def test_grep(self):
+        raw = ['space', 'space/t1', 'space/t1/t2', 'space/t3',
+               'tank', 'tank/t4']
+
+        self.assertEqual([], sh.grep('field', raw))
+        self.assertEqual(['tank', 'tank/t4'], sh.grep('^tank', raw))
+        self.assertEqual(['tank/t4'], sh.grep('^tank\/', raw))
+        self.assertEqual(3, len(sh.grep('^space\/', raw)))
+
+    def test_to_metric(self):
+        self.assertEqual('tank.t1', sh.to_metric('tank/t1'))
+        self.assertEqual('tank.t1', sh.to_metric('tank-t1', '-'))
 
 if __name__ == '__main__':
     unittest.main()

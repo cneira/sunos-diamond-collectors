@@ -56,7 +56,6 @@ class SmfSvcCollector(diamond.collector.Collector):
         ret = {}
 
         for state in self.config['states']:
-            self.log.debug(state)
             ret[state] = data.count(state)
 
         return ret
