@@ -77,7 +77,7 @@ class ZpoolCollector(diamond.collector.Collector):
         """
 
         return len(sh.run_cmd('/usr/sbin/zfs list -rH -t %s %s'
-            % (item_type, pool)))
+                              % (item_type, pool)))
 
     def zpool_dict(self):
         """
@@ -105,7 +105,7 @@ class ZpoolCollector(diamond.collector.Collector):
             for count in counts:
                 if sh.wanted(count, self.config['count']):
                     self.publish('%s.count.%s' % (pool, count),
-                            self.count_items(pool, count))
+                                 self.count_items(pool, count))
 
             for k, v in data.items():
 
