@@ -1,7 +1,6 @@
 import diamond.collector
 import sunos_helpers as sh
 from re import sub
-from sys import maxint
 
 """
 Collect CPU metrics and send them on. Most are sent through

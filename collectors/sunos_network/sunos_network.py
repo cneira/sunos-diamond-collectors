@@ -45,8 +45,6 @@ class SunOSNetworkCollector(diamond.collector.Collector):
         *seems* to be instance 0.
         """
 
-        nics = self.config['nics']
-
         if 'nic_map' in self.last_values:
             nic_map = self.last_values['nic_map']
         else:

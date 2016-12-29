@@ -17,7 +17,6 @@ operating systems.
 
 import diamond.collector
 import sunos_helpers as sh
-import string
 
 
 class ZfsCollector(diamond.collector.Collector):
@@ -25,12 +24,12 @@ class ZfsCollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(ZfsCollector, self).get_default_config()
         config.update({
-            'path':  'zfs',
+            'path': 'zfs',
             'fields': '__none__',
-            'datasets':  ['^crypto$', 'fast', 'space/ufs/jumpstart'],
+            'datasets': ['^crypto$', 'fast', 'space/ufs/jumpstart'],
             'regex': True,
             'counts': ['filsystem', 'snapshot', 'volume'],
-            })
+        })
         return config
 
     def fs_list(self):
@@ -78,8 +77,8 @@ class ZfsCollector(diamond.collector.Collector):
         """
 
         raw = sh.run_cmd(
-                '/usr/sbin/zfs list -r -d1 -Ho name -t %s %s' %
-                (obj, dataset))
+            '/usr/sbin/zfs list -r -d1 -Ho name -t %s %s' %
+            (obj, dataset))
 
         if isinstance(raw, basestring):
             return 1
@@ -105,5 +104,5 @@ class ZfsCollector(diamond.collector.Collector):
 
                 for k, v in self.get_all(fs).items():
                     if sh.wanted(k, self.config['fields']):
-                        self.publish('dataset.%s.%s' % (to_metric(fs),
-                                     k), v)
+                        self.publish('dataset.%s.%s' % (sh.to_metric(fs),
+                                                        k), v)

@@ -31,10 +31,10 @@ class FMACollector(diamond.collector.Collector):
     def get_default_config(self):
         config = super(FMACollector, self).get_default_config()
         config.update({
-            'path':     'fma',
-            'fmstat':   False,
-            'fmadm':    True
-            })
+            'path':   'fma',
+            'fmstat': False,
+            'fmadm':  True
+        })
         return config
 
     def fmadm(self):

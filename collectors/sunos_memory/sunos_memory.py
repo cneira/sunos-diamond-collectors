@@ -86,8 +86,8 @@ class SunOSMemoryCollector(diamond.collector.Collector):
                      k.endswith('%sout' % ptn)}.items():
             c = k.split(':')
 
-            if self.config['per_cpu_%s' % prefix] is True and
-            sh.wanted(k, fields):
+            if self.config['per_cpu_%s' % prefix] is True and sh.wanted(
+                    k, fields):
                 self.publish('%s.cpu.%s.%s' % (prefix, c[1], c[3]), v)
             else:
                 if c[3] not in sums:

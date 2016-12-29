@@ -1,6 +1,5 @@
 import diamond.collector
 import sunos_helpers as sh
-import re
 
 """
 This collector will produce metrics for all the zones on the box. It is
