@@ -1,16 +1,27 @@
-languages:
-  Ruby: true
-  JavaScript: true
-  PHP: true
-  Python: true
-exclude_paths:
-- "test.py"
+---
 engines:
   duplication:
     enabled: true
-    condfig:
+    config:
       languages:
-        - python
-    checks:
-      Similar code:
-        enabled: false
+      - ruby
+      - javascript
+      - python
+      - php
+  fixme:
+    enabled: true
+  rubocop:
+    enabled: true
+ratings:
+  paths:
+  - "**.inc"
+  - "**.js"
+  - "**.jsx"
+  - "**.module"
+  - "**.php"
+  - "**.py"
+  - "**.rb"
+  - "bin/*"
+exclude_paths:
+  - "test.py"
+
