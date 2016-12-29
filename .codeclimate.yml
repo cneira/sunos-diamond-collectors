@@ -1,10 +1,9 @@
 ---
-engines:
-  duplication:
-    enabled: true
-    config:
-      languages:
-      - python
-ratings:
+
+JavaScript: false
+Ruby: false
+Python: true
+PHP: false
+
 exclude_paths:
   - test.py
