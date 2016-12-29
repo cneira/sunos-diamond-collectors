@@ -318,6 +318,7 @@ def zone_map(zoneadm, passthru='__all__'):
 
     return ret
 
+
 def grep(pattern, arr):
     """
     Return a list of elements of 'raw' which match 'pattern'
@@ -338,10 +339,12 @@ def grep(pattern, arr):
 
     return ret
 
+
 def handle_value(value):
     """
     Some things are human-format numbers. bytify() can deal with
     those. We can also get ratios (as in dedup) and percentages.
+    :param value: a thing to parse. (string)
     """
 
     if value[-1] == 'x':
@@ -354,6 +357,7 @@ def handle_value(value):
         return bytify(value)
 
     raise ValueError
+
 
 def to_metric(raw, separator='/'):
     """
