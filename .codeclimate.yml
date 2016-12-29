@@ -8,6 +8,9 @@ exclude_paths:
 engines:
   duplication:
     enabled: true
+    condfig:
+      languages:
+        - python
     checks:
       Similar code:
         enabled: false
