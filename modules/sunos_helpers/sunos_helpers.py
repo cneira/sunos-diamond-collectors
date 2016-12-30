@@ -12,15 +12,19 @@ from os import path
 # Command execution stuff
 
 
-def run_cmd(cmd_str, pfexec=False):
+def run_cmd(cmd_str, pfexec=False, as_arr=False):
     """
     Run a command and return the output. Multiline output is sent
-    back as an array, single line as a string.
+    back as an array, single line as a string, unless you specify
+    otherwise.
 
     :param cmd_str: The command to run, as a string. Only allows one
         command (so no pipes) and the command must be fully qualified.
         (string)
     :param pfexec: Set to True to run the command with `pfexec`. (bool)
+    :param as_arr: If this is True, then output is always sent as
+        an array. This is useful for things which count lines of
+        output. (bool)
     :raises: NotImplementedErrror if the command is not found or if
         `pfexec` is requested but not present. An exception detailing
         the error if the command exits nonzero.
@@ -47,7 +51,7 @@ def run_cmd(cmd_str, pfexec=False):
     if proc.returncode == 0:
         out = out.strip().split('\n')
 
-        if len(out) > 1:
+        if len(out) > 1 or as_arr is True:
             return out
         else:
             return out[0]

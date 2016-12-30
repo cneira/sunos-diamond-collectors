@@ -33,6 +33,9 @@ class TestSunOSHelpers(unittest.TestCase):
         self.assertIsInstance(sh.run_cmd('/bin/sed 5q /etc/passwd'),
                               list)
         self.assertEqual(len(sh.run_cmd('/bin/sed 5q /etc/passwd')), 5)
+        self.assertEqual(len(sh.run_cmd('/bin/sed 1q /etc/passwd',
+            as_arr=True)), 1)
+        self.assertNotEqual(len(sh.run_cmd('/bin/sed 1q /etc/passwd')), 1)
 
         # This test requires a suitable profile. I gave myself this
         # privilege:
