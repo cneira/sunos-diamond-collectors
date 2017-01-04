@@ -106,15 +106,67 @@ class SunOSCPUCollector(diamond.collector.Collector):
 
             self.last_values['cpu'][cpu_id][m] = data[m]
 
+    def vcpus(self):
+        if 'vcpus' not in self.last_values:
+            self.last_values['vcpus'] = len(
+                    sh.run_cmd('/usr/sbin/psrinfo', as_arr=True))
+
+        return self.last_values['vcpus']
+
+    def clock_speed(self):
+        """
+        This works for all the Intel processors I can access. I
+        imagine it won't work for AMD, and possibly for other Intel
+        models. This seems better than parsing prstat(1).
+        """
+        speeds = sh.get_kstat(
+                'cpu_info:0:cpu_info0:supported_frequencies_Hz',
+                terse=True, only_num=False)
+
+        return float(speeds['supported_frequencies_hz'].
+                rstrip('\x00').split(':')[-1])
+
+    def cpu_stat(self, name, cpu):
+        """
+        Returns only the value for a given cpu_info kstat
+        """
+
+        speed = sh.get_kstat(
+                'cpu_info:%d:cpu_info%d:%s' % (cpu, cpu, name),
+                terse=True)
+
+        return float(speed[name.lower()])
+
     def collect(self):
         cpu_t = sh.get_kstat('cpu::sys')
         per_cpu = self.split_stats(cpu_t)
+
+        num_cpus = self.vcpus()
+
+        if sh.wanted('vcpus', self.config['fields']):
+            self.publish('global.vcpus', num_cpus)
+
+        if sh.wanted('speed', self.config['fields']):
+            self.publish('global.clock_speed', self.clock_speed())
+
+            for n in range(0, num_cpus):
+                self.publish('%d.cpuinfo.current_speed' % n,
+                        self.cpu_stat('current_clock_Hz', n))
+
+        if sh.wanted('state', self.config['fields']):
+            for n in range(0, num_cpus):
+                states = sh.get_kstat(
+                    'cpu_info:%d:cpu_info%d' % (n, n), terse=True)
+
+                for s in ('cstate', 'pstate'):
+                    self.publish('%d.cpuinfo.current_%s' % (n, s),
+                        float(states['current_%s' % s]))
 
         # If we want rate metrics, call the method which does that,
         # and remove the things it uses from the kstat list. This
         # needs to be done for each CPU.
 
-        if (self.config['as_pc_delta'] or self.config['as_nsec_delta']):
+        if self.config['as_pc_delta'] or self.config['as_nsec_delta']:
 
             for cpu, k in per_cpu.items():
                 self.ns_and_pc(cpu, k)

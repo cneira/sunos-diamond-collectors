@@ -26,6 +26,11 @@ derived metrics.
 
 Every core gets its own set of metrics.
 
+The collector can also supply various `cpuinfo` metrics. These are
+bundled together, and bundles can be turned on or off with the
+`fields` parameter. (See below.) They provide mostly power usage
+information: clock speed, C- and P-states.
+
 ## Options
 
 * **`as_nsec_delta`**: by default, the time spent in each CPU state
@@ -39,11 +44,11 @@ Every core gets its own set of metrics.
   will *not* be published. Describe fields as `nsec_user`,
   `nsec_idle` etc. Because this is a delta, the first run of the
   collector will produce no data.
-* **`as_pc_delta`**: Lets you define a list of CPU states to sent as
+* **`as_pc_delta`**: Lets you define a list of CPU states to send as
   %age usitilisation over each interval. This is the way of showing
   CPU usage that most people are familiar with. If you don't want
-  these, set the value to the magic value `__none__`. Because this
-  is a delta, the first run of the collector will produce no data.
+  these, set to the magic value `__none__`. Because this is a
+  delta, the first run of the collector will produce no data.
 * **`fields`**: a list of fields you want to collect. These are the
   names of the raw kstats, so refer to the [metric paths
   section](#metric-paths) below for a list of viable fields, or look
@@ -162,4 +167,26 @@ cpu.<cpu_id>.sys.wait_ticks_io
 cpu.<cpu_id>.sys.writech
 cpu.<cpu_id>.sys.xcalls
 cpu.<cpu_id>.sys.xmtint
+```
+
+Here are the `cpuinfo` bundles. The first is enabled or disabled
+with the `speed` field.
+
+```
+cpu.<cpu_id>.cpuinfo.current_speed
+cpu.global.clock_speed
+```
+
+The `state` bundle reports on CPU P- and C- states.
+
+```
+cpu.<cpu_id>.cpuinfo.current_cstate
+cpu.<cpu_id>.cpuinfo.current_pstate
+```
+
+The number of vCPUs can also be sent. This can be useful in
+calculating meaningful load across different sized hosts.
+
+```
+cpu.global.vcpus
 ```
