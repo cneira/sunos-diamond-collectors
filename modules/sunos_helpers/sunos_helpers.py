@@ -4,6 +4,7 @@ A library of functions to support my SunOS collectors
 
 import subprocess
 import re
+import sys
 import kstat
 import struct
 import string
@@ -233,15 +234,19 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
 
 proc_parser = {
     'usage': {
-        'fmt':  '=ii8s8s8s8s8s8s8s8s8s8s8s8s8s8s13L',
-        'keys': ('pr_lwpid', 'pr_count', 'pr_tstamp', 'pr_create',
-                 'pr_term', 'pr_rtime', 'pr_utime', 'pr_stime',
-                 'pr_ttime', 'pr_tftime', 'pr_dftime', 'pr_kftime',
-                 'pr_ltime', 'pr_slptime', 'pr_wtime', 'pr_stoptime',
-                 'pr_minf', 'pr_majf', 'pr_nswap', 'pr_inblk',
-                 'pr_oublk', 'pr_msnd', 'pr_mrcv', 'pr_sigs',
-                 'pr_vctx', 'pr_ictx', 'pr_sysc', 'pr_ioch'),
-        'size': 172,
+        'fmt':  '@iilLlLlLlLlLlLlLlLlLlLlLlLlLlL13L',
+        'keys': ('pr_lwpid', 'pr_count', 'pr_tstamp', 'pr_tstamp_ns',
+                 'pr_create', 'pr_create_ns', 'pr_term', 'pr_term_ns',
+                 'pr_rtime', 'pr_rtime_ns', 'pr_utime', 'pr_utime_ns',
+                 'pr_stime', 'pr_stime_ns', 'pr_ttime', 'pr_ttime_ns',
+                 'pr_tftime', 'pr_tftime_ns', 'pr_dftime', 'pr_dftime_ns',
+                 'pr_kftime', 'pr_kftime_ns', 'pr_ltime', 'pr_ltime_ns',
+                 'pr_slptime', 'pr_slptime_ns', 'pr_wtime', 'pr_wtime_ns',
+                 'pr_stoptime', 'pr_stoptime_ns', 'pr_minf', 'pr_majf',
+                 'pr_nswap', 'pr_inblk', 'pr_oublk', 'pr_msnd', 'pr_mrcv',
+                 'pr_sigs', 'pr_vctx', 'pr_ictx', 'pr_sysc', 'pr_ioch'),
+        'size32': 172,
+        'size64': 336,
         'ts_t': ('pr_tstamp', 'pr_create', 'pr_term', 'pr_rtime',
                  'pr_utime', 'pr_stime', 'pr_ttime', 'pr_tftime',
                  'pr_dftime', 'pr_kftime', 'pr_ltime', 'pr_slptime',
@@ -251,16 +256,28 @@ proc_parser = {
         # we don't read all of this. The LWP stuff is complicated,
         # and not relevant
 
-        'fmt':  '=iiiiiiIIIIlLLLlHH8s8s8s16s80siills3siiiiiii',
+        'fmt':  '@3i' + # flag nlwp zomb (int)
+                '8i' + # pid ppid pgid sid uid euid gid
+                'L' + # pr_addr
+                'LLl' + #pr_size pr_rssize pr_ttydev
+                '2H' + # pr_pctcpu pr_pctmem
+                'lL lL lL' + # pr_start pr_time pr_ctime
+                '16s 80s' + # pr_fname pr_psargs
+                'ii' + # pr_wstat pr_argc
+                'LL' + # pr_argv prenvp
+                's' + # pr_dmodel
+                '3sii' + # lwpsinfo_t
+                'iiiii',  # pr_taskid pr_projid
         'keys': ('pr_flag', 'pr_nlwp', 'pr_pid', 'pr_ppid', 'pr_pgid',
                  'pr_sid', 'pr_uid', 'pr_euid', 'pr_gid', 'pr_egid',
-                 'pr_addr', 'pr_size', 'pr_rssize', 'pr_pad1',
-                 'pr_ttydev', 'pr_pctcpu', 'pr_pctmem', 'pr_start',
-                 'pr_time', 'pr_ctime', 'pr_fname', 'pr_psargs',
-                 'pr_wstat', 'pr_argc', 'pr_argv', 'pr_envp',
-                 'pr_dmodel', 'pr_pad2', 'pr_taskid', 'pr_projid',
-                 'pr_nzomb', 'pr_poolid', 'pr_zoneid', 'pr_contract'),
-        'size': 232,
+                 'pr_addr', 'pr_size', 'pr_rssize', 'pr_pad1', 'pr_ttydev',
+                 'pr_pctcpu', 'pr_pctmem', 'pr_start', 'pr_start_ns', 'pr_time',
+                 'pr_time_ns', 'pr_ctime', 'pr_ctime_ns', 'pr_fname',
+                 'pr_psargs', 'pr_wstat', 'pr_argc', 'pr_argv', 'pr_envp',
+                 'pr_dmodel', 'pr_pad2', 'pr_taskid', 'pr_projid', 'pr_nzomb',
+                 'pr_poolid', 'pr_zoneid', 'pr_contract'),
+        'size32': 232,
+        'size64': 288,
         'ts_t': ('pr_start', 'pr_time', 'pr_ctime'),
     },
 }
@@ -289,16 +306,20 @@ def proc_info(p_file, pid):
 
     p_path = path.join('/proc', str(pid), p_file)
 
+    if sys.getsizeof(int()) == 12:
+        length = parser['size32']
+    else:
+        length = parse['size64']
+
     try:
-        raw = file(p_path, 'rb').read(parser['size'])
+        raw = file(p_path, 'rb').read(length)
     except:
         raise IOError('could not read %s' % p_path)
 
     ret = dict(zip(parser['keys'], struct.unpack(parser['fmt'], raw)))
 
     for k in parser['ts_t']:
-        (s, n) = struct.unpack('lL', ret[k])
-        ret[k] = (s * 1e9) + n
+        ret[k] = (ret[k] * 1e9) + ret['%s_ns' % k]
 
     return ret
 
@@ -450,3 +471,18 @@ def to_metric(raw, separator='/'):
     """
 
     return raw.translate(string.maketrans(separator, '.'))
+
+def contract_map():
+    """
+    returns a map of contract ID => SMF FMRI
+    """
+
+    raw = run_cmd('/bin/svcs -vHo ctid,fmri')
+    ret = {}
+
+    for l in raw:
+        ct, svc = l.split()
+        if ct != '-':
+            ret[ct] = svc
+
+    return ret
