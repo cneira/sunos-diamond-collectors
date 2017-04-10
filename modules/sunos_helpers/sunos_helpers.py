@@ -313,7 +313,7 @@ def proc_info(p_file, pid):
     if sys.getsizeof(int()) == 12:
         length = parser['size32']
     else:
-        length = parse['size64']
+        length = parser['size64']
 
     try:
         raw = file(p_path, 'rb').read(length)
