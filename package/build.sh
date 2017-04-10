@@ -1,4 +1,4 @@
-#!/bin/ksh -e
+#!/bin/ksh
 
 # This script builds a big fat tarball of the collectors, plus
 # everything they need to run -- including a Python runtime! It's a
@@ -26,7 +26,7 @@ which gtar >/dev/null && TAR=gtar || TAR=tar
 which gsed >/dev/null && SED=gsed || SED=sed
 BASE=${0%%/*}
 
-PYTHON_VER=2.7.12
+PYTHON_VER=2.7.13
 BUILD_DIR=/build
 CC=gcc
 CFLAGS="-O2"
@@ -48,7 +48,7 @@ compile_python()
     if [[ ! -f ${BUILD_DIR}/Python-${PYTHON_VER}.tgz ]]
     then
         msg "fetching Python ${PYTHON_VER} source"
-        wget -q -P $BUILD_DIR \
+        wget --no-check-certificate -q -P $BUILD_DIR \
             https://www.python.org/ftp/python/${PYTHON_VER}/Python-${PYTHON_VER}.tgz
     fi
 
@@ -122,9 +122,9 @@ install_fork()
 
 	if [[ $IS_SMARTOS ]]
 	then
-		script_list=$(grep -Il $TMPDIR ${TMPDIR}/diamond/bin/*)
+		script_list=$(ggrep -Il $TMPDIR ${TMPDIR}/diamond/bin/*)
 	else
-		script_list=$(grep -l $TMPDIR ${TMPDIR}/diamond/bin/*)
+		script_list=$(ggrep -l $TMPDIR ${TMPDIR}/diamond/bin/*)
 	fi
 
     for prog in $script_list
@@ -180,7 +180,7 @@ create_pkgin()
 	find ${TMPDIR}/diamond ! -type d \
 		| sed "s|${TMPDIR}/||" >${P_DIR}/pkglist
 
-	pkg_info -X pkg_install \
+	/opt/local/sbin/pkg_info -X pkg_install \
 		| egrep '^(MACHINE_ARCH|OPSYS|OS_VERSION|PKGTOOLS_VERSION)' \
 		>${P_DIR}/build-info
 
@@ -189,7 +189,7 @@ create_pkgin()
 
 	print "Diamond metric collector for SmartOS" >${P_DIR}/description
 
-    pkg_create \
+    /opt/local/sbin/pkg_create \
 		-v \
         -B ${P_DIR}/build-info \
         -d ${P_DIR}/description \
@@ -242,6 +242,7 @@ elif grep -q Solaris /etc/release
 then
     LOC=/opt
     CC=cc
+	CXX=CC
     CFLAGS="-fast"
 	build solaris $1
 else
