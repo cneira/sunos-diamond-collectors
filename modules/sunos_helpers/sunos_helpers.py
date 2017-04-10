@@ -4,7 +4,9 @@ A library of functions to support my SunOS collectors
 
 import subprocess
 import re
+import sys
 import kstat
+import struct
 import string
 from os import path
 
@@ -74,51 +76,6 @@ def zoneadm():
     else:
         return ret
 
-# ------------------------------------------------------------------------
-# Miscellany
-
-
-def wanted(have, want, regex=False):
-    """
-    A very simple filtering method to allow users to simply list the
-    metrics they want, rather than having to deal with regexes and
-    whitelists or blacklists.
-
-    :param have: Is the thing we know we have. This usually comes from an
-        iteratable. (string)
-    :param want: Could be a list. True if 'want' is a member.  Could be
-        '__all__', in which case we want whatever we 'have'. Could be
-        '__none__', in which case we don't want anything. (list, string)
-    :param regex: Normally we only return True on "plain text" matches.
-        If you wish to match on patterns, set this to True. (bool)
-    :returns: True if we have what we want, otherwise False. (bool)
-    """
-
-    assert isinstance(have, basestring)
-
-    if want == '__all__':
-        return True
-
-    if want == '__none__' or not want:
-        return False
-
-    if regex:
-        if isinstance(want, basestring):
-            if re.match(want, have):
-                return True
-        else:
-            for item in want:
-                if re.match(item, have):
-                    return True
-
-    else:
-        if isinstance(want, basestring):
-            return True if want == have else False
-
-    if have in want:
-        return True
-
-    return False
 
 # ------------------------------------------------------------------------
 # Conversion stuff
@@ -277,7 +234,155 @@ def get_kstat(descriptor, only_num=True, no_times=False, terse=False,
     return ret
 
 # ------------------------------------------------------------------------
-# MISCELLANY
+# /proc stuff
+
+proc_parser = {
+    'usage': {
+        'fmt':  '@iilLlLlLlLlLlLlLlLlLlLlLlLlLlL13L',
+        'keys': ('pr_lwpid', 'pr_count', 'pr_tstamp', 'pr_tstamp_ns',
+                 'pr_create', 'pr_create_ns', 'pr_term', 'pr_term_ns',
+                 'pr_rtime', 'pr_rtime_ns', 'pr_utime', 'pr_utime_ns',
+                 'pr_stime', 'pr_stime_ns', 'pr_ttime', 'pr_ttime_ns',
+                 'pr_tftime', 'pr_tftime_ns', 'pr_dftime', 'pr_dftime_ns',
+                 'pr_kftime', 'pr_kftime_ns', 'pr_ltime', 'pr_ltime_ns',
+                 'pr_slptime', 'pr_slptime_ns', 'pr_wtime', 'pr_wtime_ns',
+                 'pr_stoptime', 'pr_stoptime_ns', 'pr_minf', 'pr_majf',
+                 'pr_nswap', 'pr_inblk', 'pr_oublk', 'pr_msnd', 'pr_mrcv',
+                 'pr_sigs', 'pr_vctx', 'pr_ictx', 'pr_sysc', 'pr_ioch'),
+        'size32': 172,
+        'size64': 336,
+        'ts_t': ('pr_tstamp', 'pr_create', 'pr_term', 'pr_rtime',
+                 'pr_utime', 'pr_stime', 'pr_ttime', 'pr_tftime',
+                 'pr_dftime', 'pr_kftime', 'pr_ltime', 'pr_slptime',
+                 'pr_wtime', 'pr_stoptime')
+    },
+    'psinfo': {
+        # we don't read all of this. The LWP stuff is complicated,
+        # and not relevant
+
+        'fmt':  '@3i' + # flag nlwp zomb (int)
+                '8i' + # pid ppid pgid sid uid euid gid
+                'L' + # pr_addr
+                'LLl' + #pr_size pr_rssize pr_ttydev
+                '2H' + # pr_pctcpu pr_pctmem
+                'lL lL lL' + # pr_start pr_time pr_ctime
+                '16s 80s' + # pr_fname pr_psargs
+                'ii' + # pr_wstat pr_argc
+                'LL' + # pr_argv prenvp
+                's' + # pr_dmodel
+                '3sii' + # lwpsinfo_t
+                'iiiii',  # pr_taskid pr_projid
+        'keys': ('pr_flag', 'pr_nlwp', 'pr_pid', 'pr_ppid', 'pr_pgid',
+                 'pr_sid', 'pr_uid', 'pr_euid', 'pr_gid', 'pr_egid',
+                 'pr_addr', 'pr_size', 'pr_rssize', 'pr_pad1', 'pr_ttydev',
+                 'pr_pctcpu', 'pr_pctmem', 'pr_start', 'pr_start_ns', 'pr_time',
+                 'pr_time_ns', 'pr_ctime', 'pr_ctime_ns', 'pr_fname',
+                 'pr_psargs', 'pr_wstat', 'pr_argc', 'pr_argv', 'pr_envp',
+                 'pr_dmodel', 'pr_pad2', 'pr_taskid', 'pr_projid', 'pr_nzomb',
+                 'pr_poolid', 'pr_zoneid', 'pr_contract'),
+        'size32': 232,
+        'size64': 288,
+        'ts_t': ('pr_start', 'pr_time', 'pr_ctime'),
+    },
+}
+
+def proc_info(p_file, pid):
+    """
+    Parses a /proc file, according to rules in the proc_parse
+    structure. These files are binary structures, defined in the
+    proc(4) man page.
+
+    :param p_file: the file in the process /proc directory you wish
+        to parse. Rules for parsing it must be described in
+        proc_parser.  (string)
+    :param pid: the PID of the process you wish to inspect. (int)
+    :raises: NotImplemented if the p_file is unknown. IOError if the
+        file can't be read. Passes through any exception raised when
+        assembling the return value.
+    :returns: a dict of keys (from proc_parser) and their values.
+        Values of timestruc_t type are turned into straight nanoseconds.
+    """
+
+    try:
+        parser = proc_parser[p_file]
+    except:
+        raise NotImplementedError("don't know how to parse '%s'" % p_file)
+
+    p_path = path.join('/proc', str(pid), p_file)
+
+    if sys.getsizeof(int()) == 12:
+        length = parser['size32']
+    else:
+        length = parse['size64']
+
+    try:
+        raw = file(p_path, 'rb').read(length)
+    except:
+        raise IOError('could not read %s' % p_path)
+
+    ret = dict(zip(parser['keys'], struct.unpack(parser['fmt'], raw)))
+
+    for k in parser['ts_t']:
+        ret[k] = (ret[k] * 1e9) + ret['%s_ns' % k]
+
+    return ret
+
+def bpc_to_pc(pc):
+    """
+    Convert one of psinfo's weird "binary fraction" percentage
+    values to an actual percentage value. Method is copied from
+    prstat(1).
+    :param pc: raw value from psinfo
+    :returns: float
+    """
+    return float(pc) * 100 / 0x8000
+
+
+# ------------------------------------------------------------------------
+# Miscellany
+
+
+def wanted(have, want, regex=False):
+    """
+    A very simple filtering method to allow users to simply list the
+    metrics they want, rather than having to deal with regexes and
+    whitelists or blacklists.
+
+    :param have: Is the thing we know we have. This usually comes from an
+        iteratable. (string)
+    :param want: Could be a list. True if 'want' is a member.  Could be
+        '__all__', in which case we want whatever we 'have'. Could be
+        '__none__', in which case we don't want anything. (list, string)
+    :param regex: Normally we only return True on "plain text" matches.
+        If you wish to match on patterns, set this to True. (bool)
+    :returns: True if we have what we want, otherwise False. (bool)
+    """
+
+    assert isinstance(have, basestring)
+
+    if want == '__all__':
+        return True
+
+    if want == '__none__' or not want:
+        return False
+
+    if regex:
+        if isinstance(want, basestring):
+            if re.match(want, have):
+                return True
+        else:
+            for item in want:
+                if re.match(item, have):
+                    return True
+
+    else:
+        if isinstance(want, basestring):
+            return True if want == have else False
+
+    if have in want:
+        return True
+
+    return False
 
 
 def zone_map(zoneadm, passthru='__all__'):
@@ -370,3 +475,18 @@ def to_metric(raw, separator='/'):
     """
 
     return raw.translate(string.maketrans(separator, '.'))
+
+def contract_map():
+    """
+    returns a map of contract ID => SMF FMRI
+    """
+
+    raw = run_cmd('/bin/svcs -vHo ctid,fmri')
+    ret = {}
+
+    for l in raw:
+        ct, svc = l.split()
+        if ct != '-':
+            ret[ct] = svc
+
+    return ret
