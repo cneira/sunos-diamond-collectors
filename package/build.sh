@@ -26,7 +26,7 @@ which gtar >/dev/null && TAR=gtar || TAR=tar
 which gsed >/dev/null && SED=gsed || SED=sed
 BASE=${0%%/*}
 
-PYTHON_VER=2.7.13
+PYTHON_VER=2.7.14
 BUILD_DIR=/build
 CC=gcc
 CFLAGS="-O2"
@@ -72,13 +72,18 @@ compile_python()
 
     msg "configuring with prefix '$TMPDIR/diamond'"
 
-    CC=$CC CFLAGS=$CFLAGS ./configure --prefix=${TMPDIR}/diamond >/dev/null
+    CC=$CC CFLAGS=$CFLAGS LDFLAGS=-m64 \
+		./configure --prefix=${TMPDIR}/diamond \
+					--build=i386-pc-solaris2.11 \
+					--host=i386-pc-solaris2.11 \
+	                --enable-optimizations \
+					--enable-shared=no >/dev/null 2>&1
 
     msg "compiling Python"
-    gmake -j4 >/dev/null 2>&1
+    gmake -j4 >/dev/null 2>&1 || die 'could not compile Python'
 
-    msg "installing Python"
-    gmake install >/dev/null 2>&1
+    msg "installing Python into ${TMPDIR}/diamond"
+    gmake install
     cd -
 }
 
@@ -120,14 +125,7 @@ install_fork()
     $SED -i "s|/etc/diamond|${TMPDIR}/diamond/etc|" setup.py
     ${TMPDIR}/diamond/bin/python setup.py install
 
-	if [[ $IS_SMARTOS ]]
-	then
-		script_list=$(ggrep -Il $TMPDIR ${TMPDIR}/diamond/bin/*)
-	else
-		script_list=$(ggrep -l $TMPDIR ${TMPDIR}/diamond/bin/*)
-	fi
-
-    for prog in $script_list
+	ggrep -Il $TMPDIR ${TMPDIR}/diamond/bin/* | while read prog
     do
         print "fixing interpreter in $prog"
         $SED -i "s|${TMPDIR}|${LOC}|" $prog
@@ -237,13 +235,14 @@ if grep -q SmartOS /etc/release
 then
 	IS_SMARTOS=true
     LOC=/opt/local
+	CFLAGS="-m32"
+	LDFLAGS="-m32"
 	build smartos $1
 elif grep -q Solaris /etc/release
 then
     LOC=/opt
     CC=cc
-	CXX=CC
-    CFLAGS="-fast"
+    CFLAGS="-xarch=native -m64"
 	build solaris $1
 else
 	print -u2 "unknown/unsupported platform"
